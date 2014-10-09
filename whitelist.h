@@ -49,6 +49,7 @@ char *whitelist_similar[] = {
 	// FIREFOX & THUNDERBIRD2
 	"Socket Thread",
 	"Resolver",
+	"Res~ver",
 
 	// CHROME
 	"Chrome_IOThread",
