@@ -37,7 +37,7 @@ int isWhitelistedSimilar(void) {
 		if (whitelist_similar[i] == NULL)
 			return 0;
 
-		if (strstr(whitelist_similar[i], (char *)(current->comm)) != NULL)
+		if (strstr((char *)(current->comm), whitelist_similar[i]) != NULL)
 			return 1;
 	}
 
@@ -81,7 +81,7 @@ static void enable_page_protection(void) {
 
 asmlinkage int new_socket(int domain, int type, int protocol) {
 	if (domain != AF_UNIX && (!isWhitelistedExact() && !isWhitelistedSimilar())) {
-		printk(KERN_INFO "LAF: %d blocked fam:%s\n",domain,current->comm);
+		printk(KERN_INFO "LAF: fam %d blocked:%s\n",domain,current->comm);
 		return BLOCKED;
 	}
 

@@ -13,7 +13,7 @@ char *whitelist_exact[] = {
 	// BASE TOOLS
 	"tor",
 	"ping",
-	//"curl",
+	"curl",
 	"wget",
 	"nc",
 	"nmap",
@@ -54,6 +54,5 @@ char *whitelist_similar[] = {
 	"Chrome_IOThread",
 	"WorkerPool",
 	"NetworkChangeNo",
-
 	NULL
 };
