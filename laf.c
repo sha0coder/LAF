@@ -2,6 +2,10 @@
 	LAF - Linux Application Firewall  (for linux 64bits)
 	This firewall allows only communications made from allowed processes
 
+	The detection and block is performed over the socket, AF_UNIX are allowed allways, 
+	If other kind of socket is created (AF_INET,AF_INET6,...) if the processname is not in the whitelist
+	the socket creation is canceled.
+
 	by @sha0coder
 */
 
@@ -81,7 +85,7 @@ static void enable_page_protection(void) {
 
 asmlinkage int new_socket(int domain, int type, int protocol) {
 	if (domain != AF_UNIX && (!isWhitelistedExact() && !isWhitelistedSimilar())) {
-		printk(KERN_INFO "LAF: fam %d blocked:%s\n",domain,current->comm);
+		printk(KERN_INFO "LAF: fam %d blocked: %s\n",domain,current->comm);
 		return BLOCKED;
 	}
 
