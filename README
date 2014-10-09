@@ -1,0 +1,39 @@
+== intro ==
+
+LAF - Linux Application Firewall
+This kernel driver blocks internet sockets, allowing only whitelisted process to connect to LAN and internet.
+
+iptables filter by ip and port but not by process name, laf.ko is a simple driver for do this.
+
+
+== configure == 
+
+edit whitelist.h 
+
+There are two whitelist, one is compared literally with the 
+process name who is trying to create internet sockets.
+
+The other whitelist is compared with strstr(), if you want allow all processnames whos name contains x word, then this is the wordlist for doing that.
+
+For example chrome has process name with variable name, then this wordlist should be used.
+
+Also put the sys_call_table address on whitelist.h, 
+to get the address:  cat /proc/kallsyms
+
+
+== run ==
+
+
+$ make
+
+
+This will compile and insert the module on the kernel.
+If you whant to see what is blocking the kfw driver:
+
+tail -f /var/log/kern.log
+
+Oct  9 11:02:45 innovation kernel: [46304.674029] LAF Enabled
+Oct  9 11:02:54 innovation kernel: [46314.176573] LAF: 10 blocked curl
+Oct  9 11:02:54 innovation kernel: [46314.177699] LAF: 2 blocked curl
+Oct  9 11:02:54 innovation kernel: [46314.177724] LAF: 2 blocked curl
+
