@@ -28,8 +28,8 @@
 #define MAX_WHITELIST		255
 
 
-//asmlinkage long (*old_socketcall) (int call, unsigned long __user *args);
-//asmlinkage int (*old_connect) (int sockfd, const struct sockaddr *addr, long addrlen);
+asmlinkage long (*old_socketcall) (int call, unsigned long __user *args);
+asmlinkage int (*old_connect) (int sockfd, const struct sockaddr *addr, long addrlen);
 asmlinkage int (*old_socket) (int domain, int type, int protocol);
 
 
