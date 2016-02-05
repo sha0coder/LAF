@@ -9,10 +9,16 @@ uninstall:
 install:
 	sudo insmod laf.ko
 
+reinstall:
+	make uninstall
+	make clean
+	make 	
+	make install
+
 clean:
 	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
-	rm -f lalala
 
 test:
 	gcc test.c -o lalala
-	./lalala
+	./lalala && rm -f lalala
+

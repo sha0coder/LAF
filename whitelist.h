@@ -22,7 +22,15 @@ char *whitelist_exact[] = {
 	"ssh",
 	"ftp",
 
+	"dnsmasq",
 	"Telegram",
+
+	//ffox
+	"MTPThread",
+	"Socket Thread",
+
+	//"sudo", // yes sudo uses raw sockets :)  uncomment this if you cannot make sudo
+	
 
 /*
 	// HACK TOOLS
@@ -51,6 +59,9 @@ char *whitelist_exact[] = {
 // strstr()
 
 char *whitelist_similar[] = {
+	//"Qt bearer",
+	"Qt HTTP",
+	"DNS Res",
 /*
 	// FIREFOX & THUNDERBIRD2
 	"Socket Thread",

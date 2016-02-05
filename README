@@ -39,9 +39,14 @@ Oct  9 11:02:54 innovation kernel: [46314.177724] LAF: 2 blocked curl
 
 == filosofy ==
 
-This is not a protection agains advanced attackers, this can by bypassed by changing the process name for example, or maybe with socket_call.
+This is not a protection agains advanced attackers, this can by bypassed by changing the process name 
+or also with socket_call.
 
 The objective is detecting and/or blocking software that should not be connecting to internet, as spyware.
+
+In the past, we protected our open ports to internet, nowadays the problem is in client side, 
+client apps sending data to internet.
+
 
 == authors ==
 @sha0coder && @capi_x
