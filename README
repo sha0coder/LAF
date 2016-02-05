@@ -43,3 +43,6 @@ This is not a protection agains advanced attackers, this can by bypassed by chan
 
 The objective is detecting and/or blocking software that should not be connecting to internet, as spyware.
 
+== authors ==
+@sha0coder && @capi_x
+
