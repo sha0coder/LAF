@@ -2,11 +2,13 @@
 	LAF - Linux Application Firewall  (for linux 64bits)
 	This firewall allows only communications made from allowed processes
 
-	The detection and block is performed over the socket, AF_UNIX are allowed allways, 
-	If other kind of socket is created (AF_INET,AF_INET6,...) if the processname is not in the whitelist
-	the socket creation is canceled.
+	The detection and block is performed over the socket, AF_UNIX are allowed
+	allways. 
 
-	by @sha0coder
+	If other kind of socket is created (AF_INET,AF_INET6,...) if the
+	processname is not in the whitelist the socket creation is canceled.
+
+	by @sha0coder and @capi_x
 */
 
 #include <linux/module.h>	/* Needed by all modules */
@@ -17,6 +19,7 @@
 #include <linux/sched.h> 	// current struct
 #include <linux/in.h>		// sockaddr_in
 #include <linux/socket.h>
+#include <linux/syscalls.h>
 
 #include "whitelist.h"
 
@@ -27,11 +30,28 @@
 #define BLOCKED				-1
 #define MAX_WHITELIST		255
 
-
 //asmlinkage long (*old_socketcall) (int call, unsigned long __user *args);
 //asmlinkage int (*old_connect) (int sockfd, const struct sockaddr *addr, long addrlen);
 asmlinkage int (*old_socket) (int domain, int type, int protocol);
 
+unsigned long **st;
+
+static unsigned long **aquire_sys_call_table(void)
+{
+	unsigned long int offset = PAGE_OFFSET;
+	unsigned long **sct;
+
+	while (offset < ULLONG_MAX) {
+		sct = (unsigned long **)offset;
+
+		if (sct[__NR_close] == (unsigned long *) sys_close) 
+			return sct;
+
+		offset += sizeof(void *);
+	}
+	
+	return NULL;
+}
 
 int isWhitelistedSimilar(void) {
 	int i;
@@ -84,14 +104,17 @@ static void enable_page_protection(void) {
 }
 
 asmlinkage int new_socket(int domain, int type, int protocol) {
-	if (domain != AF_UNIX && (!isWhitelistedExact() && !isWhitelistedSimilar())) {
-		printk(KERN_INFO "LAF: fam %d blocked: %s\n",domain,current->comm);
-		return BLOCKED;
-	}
+	if (domain != AF_UNIX) {
+		if  (!isWhitelistedExact() && !isWhitelistedSimilar()) {
+			printk(KERN_INFO "LAF: fam %d blocked: %s\n",domain,current->comm);
+			return BLOCKED;
+		}
+		if (DEBUG)
+			printk(KERN_INFO "LAF: fam %d allowed: %s\n",domain,current->comm);
+	}	
 
 	return old_socket(domain,type,protocol);
 }
-
 
 /*
 asmlinkage int new_connect(int sockfd, const struct sockaddr *addr, long addrlen) {
@@ -99,7 +122,7 @@ asmlinkage int new_connect(int sockfd, const struct sockaddr *addr, long addrlen
 		return -1;
 	
 	if (((struct sockaddr_in *)addr)->sin_family == AF_INET) {
-		if (!isWhitelisted()) {
+		if (!isWhitelistedExact()) {
 			if (LOG)
 				printk(KERN_INFO "LAF blocked %s\n",current->comm);
 			return -1;
@@ -122,7 +145,7 @@ asmlinkage long new_socketcall(int call, unsigned long __user *args) {
 			
 			printk(KERN_INFO "fam:%d proc:%s\n",((struct sockaddr_in *)args[1])->sin_family,current->comm);
 			if (((struct sockaddr_in *)args[1])->sin_family != 1)
-				if (!isWhitelisted())
+				if (!isWhitelistedExact())
 					return BLOCKED;
 			
 			break;
@@ -134,7 +157,7 @@ asmlinkage long new_socketcall(int call, unsigned long __user *args) {
 			
 			printk(KERN_INFO "fam:%d proc:%s\n",((struct sockaddr_in *)args[1])->sin_family,current->comm);
 			if (((struct sockaddr_in *)args[4])->sin_family != 1)
-				if (!isWhitelisted())
+				if (!isWhitelistedExact())
 					return BLOCKED;
 			break;
 
@@ -161,7 +184,8 @@ asmlinkage long new_socketcall(int call, unsigned long __user *args) {
 	}
 
 	return old_socketcall(call,args);
-}*/
+}
+*/
 
 void unHook(void) {
 	disable_page_protection();
@@ -178,6 +202,8 @@ void hook(void) {
 
 
 static int __init load(void) {
+	/* load the syscall table addr in st */
+	st = aquire_sys_call_table();
 	hook();
 	printk(KERN_INFO "LAF Enabled\n");
 	return 0;

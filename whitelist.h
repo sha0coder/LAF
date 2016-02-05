@@ -1,13 +1,14 @@
-
-
 // put here your syscall table address  (grep sys_call_table /proc/kallsyms)
-unsigned long **st = (unsigned long **)0xffffffff81801400;
+//unsigned long **st = (unsigned long **)0xffffffff81801400;
 
+// LOG 0 -> don't log blocks | LOG 1 -> log blocks
+#define LOG 1 
 
-#define LOG 1 // 0 -> don't log blocks   1 -> log blocks
+// DEBUG 1 -> log allowed sockets
+#define DEBUG 1
 
-// Only following process names will be allowed to connect to LAN and internet(ipv4 & ipv6), 
-// the process need to have the name exactly equal than the whitelisted.
+// Only following process names will be allowed to connect to LAN and internet
+// (IPv4/6) the process need to have the name exactly equal than the whitelisted
 
 char *whitelist_exact[] = {
 	// BASE TOOLS
@@ -21,6 +22,9 @@ char *whitelist_exact[] = {
 	"ssh",
 	"ftp",
 
+	"Telegram",
+
+/*
 	// HACK TOOLS
 	"pipper",
 	"fauth",
@@ -36,16 +40,18 @@ char *whitelist_exact[] = {
 
 	// FIREFOX & THUNDERBIRD
 	"dnsmasq",
-
+*/
 
 	NULL
 };
 
 
-// Processes whos name contains some of this words will be also allowed to connect to internet and LAN (ipv4 & ipv6)
-// this words are compared with strstr()
+// Processes whos name contains some of this words will be also allowed to
+// connect to internet and LAN (ipv4 & ipv6) this words are compared with
+// strstr()
 
 char *whitelist_similar[] = {
+/*
 	// FIREFOX & THUNDERBIRD2
 	"Socket Thread",
 	"Resolver",
@@ -54,6 +60,6 @@ char *whitelist_similar[] = {
 	// CHROME
 	"Chrome_IOThread",
 	"WorkerPool",
-	"NetworkChangeNo",
+	"NetworkChangeNo",*/
 	NULL
 };
