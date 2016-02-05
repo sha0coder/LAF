@@ -5,7 +5,7 @@
 #define LOG 1 
 
 // DEBUG 1 -> log allowed sockets
-#define DEBUG 1
+#define DEBUG 0
 
 // Only following process names will be allowed to connect to LAN and internet
 // (IPv4/6) the process need to have the name exactly equal than the whitelisted
