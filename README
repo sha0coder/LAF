@@ -17,9 +17,6 @@ The other whitelist is compared with strstr(), if you want allow all processname
 
 For example chrome has process name with variable name, then this wordlist should be used.
 
-Also put the sys_call_table address on whitelist.h, 
-to get the address:  cat /proc/kallsyms
-
 
 == run ==
 
@@ -31,17 +28,22 @@ If you whant to see what is blocking the kfw driver:
 
 tail -f /var/log/kern.log
 
-Oct  9 11:02:45 innovation kernel: [46304.674029] LAF Enabled
-Oct  9 11:02:54 innovation kernel: [46314.176573] LAF: 10 blocked curl
-Oct  9 11:02:54 innovation kernel: [46314.177699] LAF: 2 blocked curl
-Oct  9 11:02:54 innovation kernel: [46314.177724] LAF: 2 blocked curl
+[ 9006.541447] LAF: Enabled
+[ 9010.042030] LAF: call 01 fam 0x100000002 blocked: iexplore.exe (24763:24730) parent: wine (24728)
+[ 9015.586690] LAF: call 01 fam 0x100000002 blocked: kk.x86 (24769:24769) parent: bash (10343)
+[13118.760088] LAF: call 01 fam 0x100000002 blocked: wineserver (25729:25729) parent: systemd (1)
+[16569.004590] LAF: fam 10 proto 00 blocked: VBoxXPCOMIPCD (26102:26102) parent: systemd (1)
+[16569.048654] LAF: fam 10 proto 00 blocked: VBoxSVC (26107:26107) parent: systemd (1)
 
 
 == filosofy ==
 
-This is not a protection agains advanced attackers, this can by bypassed by changing the process name for example, or maybe with socket_call.
+This is not a protection agains advanced attackers, this can by bypassed for example changing the process name for a whitelisted one.
 
 The objective is detecting and/or blocking software that should not be connecting to internet, as spyware.
+
+In the past, we protected our open ports to internet, nowadays the problem is in client side, 
+client apps sending data to internet.
 
 == authors ==
 @sha0coder && @capi_x

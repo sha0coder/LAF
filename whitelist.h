@@ -1,6 +1,3 @@
-// put here your syscall table address  (grep sys_call_table /proc/kallsyms)
-//unsigned long **st = (unsigned long **)0xffffffff81801400;
-
 // Only following process names will be allowed to connect to LAN and internet
 // (IPv4/6) the process need to have the name exactly equal than the whitelisted
 
