@@ -5,12 +5,13 @@ all:
 
 uninstall:
 	sudo rmmod laf
-	sudo rm /lib/modules/$(uname -r)/kernel/net/laf/laf.ko
-	sudo rmdir /lib/modules/$(uname -r)/kernel/net/laf
+	sudo rm /lib/modules/$(shell uname -r)/kernel/net/laf/laf.ko
+	sudo rmdir /lib/modules/$(shell uname -r)/kernel/net/laf
+	echo "** NOW REMOVE laf FROM YOUR /etc/modules.conf OR /etc/modules-load.d FILE **"
 
 install: all
-	sudo mkdir /lib/modules/$(uname -r)/kernel/net/laf
-	sudo cp -f laf.ko /lib/modules/$(uname -r)/kernel/net/laf
+	sudo mkdir /lib/modules/$(shell uname -r)/kernel/net/laf
+	sudo cp -f laf.ko /lib/modules/$(shell uname -r)/kernel/net/laf
 	sudo depmod -a
 	echo "** NOW ADD laf TO YOUR /etc/modules.conf OR /etc/modules-load.d FILE **"
 
