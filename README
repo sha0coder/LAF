@@ -27,7 +27,7 @@ You can load it with:
 
 $ make load
 
-If you whant to see what is blocking the LAF driver:
+If you want to see what is blocking the LAF driver:
 
 tail -f /var/log/kern.log
 
