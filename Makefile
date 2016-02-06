@@ -6,8 +6,10 @@ all:
 uninstall:
 	sudo rmmod laf
 
-install:
+install: all
 	sudo insmod laf.ko
+
+reset: uninstall install
 
 reinstall:
 	make uninstall

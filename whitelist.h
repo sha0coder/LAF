@@ -2,10 +2,10 @@
 //unsigned long **st = (unsigned long **)0xffffffff81801400;
 
 // LOG 0 -> don't log blocks | LOG 1 -> log blocks
-#define LOG 1 
+//#define LOG 1 
 
 // DEBUG 1 -> log allowed sockets
-#define DEBUG 0
+//#define DEBUG 0
 
 // Only following process names will be allowed to connect to LAN and internet
 // (IPv4/6) the process need to have the name exactly equal than the whitelisted

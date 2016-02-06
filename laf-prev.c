@@ -14,30 +14,21 @@
 #include <linux/module.h>	/* Needed by all modules */
 #include <linux/kernel.h>	/* Needed for KERN_INFO */
 #include <linux/init.h>		/* Needed for the macros */
-#include <linux/limits.h>	// ULLONG_MAX
+#include <linux/limits.h>   // ULLONG_MAX
 #include <linux/net.h>		
 #include <linux/sched.h> 	// current struct
 #include <linux/in.h>		// sockaddr_in
 #include <linux/socket.h>
 #include <linux/syscalls.h>
-#include <linux/sysctl.h>
 
 #include "whitelist.h"
 
-#define __NR_socketcall		102
+#define __NR_socketcall     102
 #define __NR_connect		42
 //#define __NR_socket 		4
 
 #define BLOCKED				-1
 #define MAX_WHITELIST		255
-
-// DEBUG 1 -> log allowed sockets
-// LOG   0 -> don't log blocks | LOG 1 -> log blocks
-static int DEBUG =			0;
-static int LOG   =			1;
-static int sysctl_min_val =		0;
-static int sysctl_max_val =		1;
-static struct ctl_table_header *busy_sysctl_header;
 
 //asmlinkage long (*old_socketcall) (int call, unsigned long __user *args);
 //asmlinkage int (*old_connect) (int sockfd, const struct sockaddr *addr, long addrlen);
@@ -112,31 +103,14 @@ static void enable_page_protection(void) {
     asm volatile("mov %0, %%cr0" : : "r" (value | 0x00010000));
 }
 
-/* new_socket - function to block or allow a new socket
- * --
- * Those family/type are whitelisted because cannot use IPv4/6:
- *
- * +============+===========================+====+
- * | FAMILY		| PROTOCOLS					|TYPE|
- * +============+===========================+====+
- * | AF_UNIX	| ALL PROTOCOLS			    | -- |
- * +------------+---------------------------+----+
- * | AF_NETLINK	| NETLINK_AUDIT				| 09 |
- * |			| NETLINK_KOBJECT_UEVENT	| 15 |
- * +------------+---------------------------+----+
- *
- * This function also check if the socket is whitelisted in the
- * file: whitelist.h
- */ 
-
 asmlinkage int new_socket(int domain, int type, int protocol) {
-	if ((domain != AF_UNIX) && ((domain != AF_NETLINK) && (protocol != 9) && (protocol != 15))) {
+	if (domain != AF_UNIX) {
 		if  (!isWhitelistedExact() && !isWhitelistedSimilar()) {
-			printk(KERN_INFO "LAF: fam %02d proto %02d blocked: %s (%i:%i) parent: %s (%i)\n",domain,protocol,current->comm,current->pid,current->tgid,current->real_parent->comm,current->real_parent->pid);
+			printk(KERN_INFO "LAF: fam %d blocked: %s\n",domain,current->comm);
 			return BLOCKED;
 		}
 		if (DEBUG)
-			printk(KERN_INFO "LAF: fam %02d proto %02d allowed: %s (%i:%i) parent: %s (%i)\n",domain,protocol,current->comm,current->pid,current->tgid,current->real_parent->comm,current->real_parent->pid);
+			printk(KERN_INFO "LAF: fam %d allowed: %s\n",domain,current->comm);
 	}	
 
 	return old_socket(domain,type,protocol);
@@ -213,50 +187,6 @@ asmlinkage long new_socketcall(int call, unsigned long __user *args) {
 }
 */
 
-static struct ctl_table laf_child_table[] = {
-	{
-//		.ctl_name		= CTL_UNNUMBERED,
-		.procname		= "debug",
-		.maxlen			= sizeof(int),
-		.mode			= 0644,
-		.data			= &DEBUG,
-		.proc_handler	= &proc_dointvec_minmax,
-		.extra1			= &sysctl_min_val,
-		.extra2			= &sysctl_max_val,
-	},
-	{
-//		.ctl_name		= CTL_UNNUMBERED,
-		.procname		= "log",
-		.maxlen			= sizeof(int),
-		.mode			= 0644,
-		.data			= &LOG,
-		.proc_handler	= &proc_dointvec_minmax,
-		.extra1			= &sysctl_min_val,
-		.extra2			= &sysctl_max_val,
-	},
-	{}
-};
-
-static struct ctl_table laf_main_table[] = {
-{
-//		.ctl_name		= CTL_KERN,
-		.procname		= "laf",
-		.mode			= 0555,
-		.child			= laf_child_table,
-	},
-	{}
-};
-
-static struct ctl_table kernel_main_table[] = {
-{
-//		.ctl_name		= CTL_KERN,
-		.procname		= "kernel",
-		.mode			= 0555,
-		.child			= laf_main_table,
-	},
-	{}
-};
-
 void unHook(void) {
 	disable_page_protection();
 	st[__NR_socket] = (void *)old_socket;
@@ -272,13 +202,6 @@ void hook(void) {
 
 
 static int __init load(void) {
-	/* register sysctl table */
-	busy_sysctl_header = register_sysctl_table(kernel_main_table);
-	if (!busy_sysctl_header) {
-		printk(KERN_ALERT "Error: Failed to register kernel_main_table\n");
-		return -EFAULT;
-	}
-
 	/* load the syscall table addr in st */
 	st = aquire_sys_call_table();
 	hook();
@@ -288,8 +211,6 @@ static int __init load(void) {
 
 static void __exit unload(void) {
 	unHook();
-	/* Unregister sysctl table */
-	unregister_sysctl_table(busy_sysctl_header);
 	printk(KERN_INFO "LAF Disabled\n");
 }
 
