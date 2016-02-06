@@ -1,18 +1,11 @@
 // put here your syscall table address  (grep sys_call_table /proc/kallsyms)
 //unsigned long **st = (unsigned long **)0xffffffff81801400;
 
-// LOG 0 -> don't log blocks | LOG 1 -> log blocks
-//#define LOG 1 
-
-// DEBUG 1 -> log allowed sockets
-//#define DEBUG 0
-
 // Only following process names will be allowed to connect to LAN and internet
 // (IPv4/6) the process need to have the name exactly equal than the whitelisted
 
 char *whitelist_exact[] = {
 	// BASE TOOLS
-	"tor",
 	"ping",
 	"curl",
 	"wget",
@@ -20,35 +13,73 @@ char *whitelist_exact[] = {
 	"nmap",
 	"host",
 	"ssh",
+	"telnet",
 	"ftp",
-
-	"dnsmasq",
-	"Telegram",
-
-	//ffox
-	"MTPThread",
-	"Socket Thread",
-
-	//"sudo", // yes sudo uses raw sockets :)  uncomment this if you cannot make sudo
-	
-
-/*
-	// HACK TOOLS
-	"pipper",
-	"fauth",
-	"smtpEnum",
-	"exploit-db",
-	"python",
-	"python2",
-	"sudo",
-
-	// SYSTEM 
 	"nslookup",
-	"systemd-udevd",
 
-	// FIREFOX & THUNDERBIRD
-	"dnsmasq",
-*/
+	// NETWORK
+	"ip",
+	"route",
+	"ntpdate",
+	"iptables",
+	"dhclient",
+	"ifconfig",
+	"iwconfig",
+	"wpa_supplicant",
+	"NetworkManager",
+	"crda",
+
+	// SYSTEM
+	"systemd-udevd",
+	"rpcbind",
+	"rpc.statd",
+	"avahi-daemon",
+	"minissdpd",
+	"colord-sane",
+	"sshd",
+	"pool",
+	"systemd",
+	"exim4",
+	"sendmail",
+//	"cron",
+
+	// DEBIAN
+	"http",
+
+	// DESKTOP
+	"gnome-settings-",
+	"clock-applet",
+	"mate-sensors-ap",
+	"mate-system-mon",
+	"xbrlapi",
+
+	// TOOLS
+	"radare2",
+	"git-remote-http",
+	"dig",
+	"python",
+//	"tor",
+//	"pipper",
+//	"fauth",
+//	"smtpEnum",
+//	"exploit-db",
+
+	// VIRTUALBOX
+	"EMT",
+	"NAT",
+
+	// GAMES
+	"steam",
+	"steamwebhelper",
+	"arma3.i386",
+	"defcon.bin.x86",
+	"mb_warband_linu",
+	"ts3client_linux",
+	"eurotrucks2",
+	"X-Plane-x86_64",
+	"KSP.x86",
+	"tld.x86_64",
+	"PrisionArchitect",
 
 	NULL
 };
@@ -59,18 +90,26 @@ char *whitelist_exact[] = {
 // strstr()
 
 char *whitelist_similar[] = {
-	//"Qt bearer",
-	"Qt HTTP",
-	"DNS Res",
-/*
 	// FIREFOX & THUNDERBIRD2
 	"Socket Thread",
 	"Resolver",
 	"Res~ver",
+	"DNS Res~er",
+
+	// QT
+	"MTPThread",
+	"Qt HTTP thread",
+	"Qt bearer threa",
+
+	// STEAM
+	"CHTTPClientThre",
+	"CIPCServer::Thr",
+	"CSteamControlle",
 
 	// CHROME
 	"Chrome_IOThread",
 	"WorkerPool",
-	"NetworkChangeNo",*/
+	"NetworkChangeNo",
+
 	NULL
 };

@@ -11,16 +11,12 @@ install: all
 
 reset: uninstall install
 
-reinstall:
-	make uninstall
-	make clean
-	make 	
-	make install
-
 clean:
 	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
 
+clean-test:
+	rm -f lalala
+
 test:
 	gcc test.c -o lalala
-	./lalala && rm -f lalala
-
+	./lalala

@@ -24,12 +24,16 @@
 
 #include "whitelist.h"
 
-#define __NR_socketcall		102
-#define __NR_connect		42
-//#define __NR_socket 		4
-
 #define BLOCKED				-1
 #define MAX_WHITELIST		255
+
+#ifdef __x86_64__
+# define __NR_socketcall	102
+# define IA32_AF_INET		0x100000002
+#else
+# define IA32_AF_INET		0x2
+# define __NR_socket 		(__X32_SYSCALL_BIT + 41)
+#endif
 
 // DEBUG 1 -> log allowed sockets
 // LOG   0 -> don't log blocks | LOG 1 -> log blocks
@@ -39,13 +43,13 @@ static int sysctl_min_val =		0;
 static int sysctl_max_val =		1;
 static struct ctl_table_header *busy_sysctl_header;
 
-//asmlinkage long (*old_socketcall) (int call, unsigned long __user *args);
-//asmlinkage int (*old_connect) (int sockfd, const struct sockaddr *addr, long addrlen);
+asmlinkage long (*old_socketcall) (int call, unsigned long __user *args);
 asmlinkage int (*old_socket) (int domain, int type, int protocol);
 
 unsigned long **st;
+unsigned long **ia32_st;
 
-static unsigned long **aquire_sys_call_table(void)
+static unsigned long **acquire_sys_call_table(void)
 {
 	unsigned long int offset = PAGE_OFFSET;
 	unsigned long **sct;
@@ -61,6 +65,25 @@ static unsigned long **aquire_sys_call_table(void)
 	
 	return NULL;
 }
+
+#ifdef __x86_64__
+static unsigned long **acquire_ia32_sys_call_table(void)
+{
+	unsigned long int offset = PAGE_OFFSET;
+	unsigned long **sct;
+
+	while (offset < ULLONG_MAX) {
+		sct = (unsigned long **)offset;
+
+		if (sct[__NR_ia32_lchown] == (unsigned long *) 0xffffffff810d5810) 
+			return sct;
+
+		offset += sizeof(void *);
+	}
+	
+	return NULL;
+}
+#endif
 
 int isWhitelistedSimilar(void) {
 	int i;
@@ -134,88 +157,34 @@ asmlinkage int new_socket(int domain, int type, int protocol) {
 		if  (!isWhitelistedExact() && !isWhitelistedSimilar()) {
 			printk(KERN_INFO "LAF: fam %02d proto %02d blocked: %s (%i:%i) parent: %s (%i)\n",domain,protocol,current->comm,current->pid,current->tgid,current->real_parent->comm,current->real_parent->pid);
 			return BLOCKED;
-		}
-		if (DEBUG)
+		} else if (DEBUG)
 			printk(KERN_INFO "LAF: fam %02d proto %02d allowed: %s (%i:%i) parent: %s (%i)\n",domain,protocol,current->comm,current->pid,current->tgid,current->real_parent->comm,current->real_parent->pid);
 	}	
 
 	return old_socket(domain,type,protocol);
 }
 
-/*
-asmlinkage int new_connect(int sockfd, const struct sockaddr *addr, long addrlen) {
-	if (((struct sockaddr_in *)addr)->sin_family == AF_INET6)
-		return -1;
-	
-	if (((struct sockaddr_in *)addr)->sin_family == AF_INET) {
-		if (!isWhitelistedExact()) {
-			if (LOG)
-				printk(KERN_INFO "LAF blocked %s\n",current->comm);
-			return -1;
-			//return BLOCKED;
-		}
-	}
-
-	return old_connect(sockfd,addr,addrlen);
-}
-
 asmlinkage long new_socketcall(int call, unsigned long __user *args) {
-
-	printk(KERN_INFO "new_socketcall %d",call);
 
 	switch (call) {
 		case SYS_BIND:
-		case SYS_CONNECT:
-			printk(KERN_INFO "LAF: socketcall connect/bind proc:%s\n",current->comm);
-			return -1;
-			
-			printk(KERN_INFO "fam:%d proc:%s\n",((struct sockaddr_in *)args[1])->sin_family,current->comm);
-			if (((struct sockaddr_in *)args[1])->sin_family != 1)
-				if (!isWhitelistedExact())
-					return BLOCKED;
-			
-			break;
-
-		case SYS_SENDTO:
-		case SYS_RECVFROM:
-			printk(KERN_INFO "LAF: socketcall sendto/recvfrom proc:%s\n",current->comm);
-			return -1;
-			
-			printk(KERN_INFO "fam:%d proc:%s\n",((struct sockaddr_in *)args[1])->sin_family,current->comm);
-			if (((struct sockaddr_in *)args[4])->sin_family != 1)
-				if (!isWhitelistedExact())
-					return BLOCKED;
-			break;
-
-	
-		case SYS_SENDMSG:
-		case SYS_RECVMSG:
-			break;
-
-		case SYS_ACCEPT:
-		case SYS_SEND:
-		case SYS_RECV:
-		case SYS_LISTEN:
-			break;
-
 		case SYS_SOCKET:
-        case SYS_GETSOCKNAME:
-        case SYS_GETPEERNAME:
-        case SYS_SOCKETPAIR:
-        case SYS_SHUTDOWN:
-        case SYS_SETSOCKOPT:
-        case SYS_GETSOCKOPT:
-        	break;
-
+		if (args[0] == IA32_AF_INET) {	
+			if  (!isWhitelistedExact() && !isWhitelistedSimilar()) {
+				printk(KERN_INFO "LAF: call %02d fam 0x%lx blocked: %s (%i:%i) parent: %s (%i)\n",call,args[0],current->comm,current->pid,current->tgid,current->real_parent->comm,current->real_parent->pid);
+				return BLOCKED;
+			} else if (DEBUG)
+				printk(KERN_INFO "LAF: call %02d fam 0x%lx allowed: %s (%i:%i) parent: %s (%i)\n",call,args[0],current->comm,current->pid,current->tgid,current->real_parent->comm,current->real_parent->pid);
+		}
+				
+		break;
 	}
 
 	return old_socketcall(call,args);
 }
-*/
 
 static struct ctl_table laf_child_table[] = {
 	{
-//		.ctl_name		= CTL_UNNUMBERED,
 		.procname		= "debug",
 		.maxlen			= sizeof(int),
 		.mode			= 0644,
@@ -225,7 +194,6 @@ static struct ctl_table laf_child_table[] = {
 		.extra2			= &sysctl_max_val,
 	},
 	{
-//		.ctl_name		= CTL_UNNUMBERED,
 		.procname		= "log",
 		.maxlen			= sizeof(int),
 		.mode			= 0644,
@@ -239,7 +207,6 @@ static struct ctl_table laf_child_table[] = {
 
 static struct ctl_table laf_main_table[] = {
 {
-//		.ctl_name		= CTL_KERN,
 		.procname		= "laf",
 		.mode			= 0555,
 		.child			= laf_child_table,
@@ -249,7 +216,6 @@ static struct ctl_table laf_main_table[] = {
 
 static struct ctl_table kernel_main_table[] = {
 {
-//		.ctl_name		= CTL_KERN,
 		.procname		= "kernel",
 		.mode			= 0555,
 		.child			= laf_main_table,
@@ -259,14 +225,29 @@ static struct ctl_table kernel_main_table[] = {
 
 void unHook(void) {
 	disable_page_protection();
-	st[__NR_socket] = (void *)old_socket;
+
+	/* Reset old syscall table */
+#ifdef __x86_64__
+	st[__NR_socket]				= (void *)old_socket;
+#endif
+	ia32_st[__NR_socketcall]	= (void *)old_socketcall;
+
 	enable_page_protection();
 }
 
 void hook(void) {
 	disable_page_protection();
-	old_socket = (void *)st[__NR_socket];
-	st[__NR_socket] = (void *)new_socket;
+
+	/* 64 bits sys_socket */
+#ifdef __x86_64__
+	old_socket		= (void *)st[__NR_socket];
+	st[__NR_socket]	= (void *)new_socket;
+#endif
+
+	/* 32 bit sys_socketcall */
+	old_socketcall				= (void *)ia32_st[__NR_socketcall];
+	ia32_st[__NR_socketcall]	= (void *)new_socketcall;
+
 	enable_page_protection();
 }
 
@@ -280,9 +261,21 @@ static int __init load(void) {
 	}
 
 	/* load the syscall table addr in st */
-	st = aquire_sys_call_table();
+	st		= acquire_sys_call_table();
+
+	/* load the 32 bit emul sys_table on amd64 or the real 32 sys_table on ia32 */
+#ifdef __x86_64__
+	ia32_st = acquire_ia32_sys_call_table();
+#else
+	ia32_st = st;
+#endif
+
 	hook();
-	printk(KERN_INFO "LAF Enabled\n");
+	printk(KERN_INFO "LAF: Enabled\n");
+			
+	if (DEBUG)
+		printk(KERN_INFO "LAF: st -> 0x%p - ia32_st -> 0x%p)\n",st,ia32_st);
+
 	return 0;
 }
 
@@ -290,7 +283,7 @@ static void __exit unload(void) {
 	unHook();
 	/* Unregister sysctl table */
 	unregister_sysctl_table(busy_sysctl_header);
-	printk(KERN_INFO "LAF Disabled\n");
+	printk(KERN_INFO "LAF: Disabled\n");
 }
 
 module_init(load);
