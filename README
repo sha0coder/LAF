@@ -20,11 +20,14 @@ For example chrome has process name with variable name, then this wordlist shoul
 
 == run ==
 
-$ make
+$ make install
 
+This will compile and copy the module on /lib/modules.
+You can load it with:
 
-This will compile and insert the module on the kernel.
-If you whant to see what is blocking the kfw driver:
+$ make load
+
+If you whant to see what is blocking the LAF driver:
 
 tail -f /var/log/kern.log
 
@@ -44,6 +47,7 @@ The objective is detecting and/or blocking software that should not be connectin
 
 In the past, we protected our open ports to internet, nowadays the problem is in client side, 
 client apps sending data to internet.
+
 
 == authors ==
 @sha0coder && @capi_x
