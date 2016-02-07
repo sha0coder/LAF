@@ -31,7 +31,9 @@
 # define __NR_socketcall	102
 # define IA32_AF_INET		0x100000002
 #elif defined(__i386__)
-# define __NR_socket 		(__X32_SYSCALL_BIT + 41)
+# ifndef  __NR_socket
+#  define __NR_socket 		(__X32_SYSCALL_BIT + 41)
+# endif
 # define IA32_AF_INET		0x2
 #else
 # define IA32_AF_INET		0x2

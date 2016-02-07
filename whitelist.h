@@ -55,6 +55,7 @@ char *whitelist_exact[] = {
 
 	// TOOLS
 	"radare2",
+	"git",
 	"git-remote-http",
 	"dig",
 	"python",
