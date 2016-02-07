@@ -247,7 +247,7 @@ void hook(void) {
 	disable_page_protection();
 
 	/* Intel 64 bits and ARM sys_socket */
-#ifndef __x86_64__
+#ifndef __i386__
 	old_socket		= (void *)st[__NR_socket];
 	st[__NR_socket]	= (void *)new_socket;
 #endif
