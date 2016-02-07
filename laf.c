@@ -30,9 +30,10 @@
 #ifdef __x86_64__
 # define __NR_socketcall	102
 # define IA32_AF_INET		0x100000002
+#elif __i386__
+# define __NR_socket 		(__X32_SYSCALL_BIT + 41)
 #else
 # define IA32_AF_INET		0x2
-# define __NR_socket 		(__X32_SYSCALL_BIT + 41)
 #endif
 
 // DEBUG 1 -> log allowed sockets
@@ -116,6 +117,7 @@ int isWhitelistedExact(void) {
 }
 
 static void disable_page_protection(void) {
+#ifndef __arm__
     unsigned long value;
     asm volatile("mov %%cr0, %0" : "=r" (value));
 
@@ -123,9 +125,11 @@ static void disable_page_protection(void) {
         return;
 
     asm volatile("mov %0, %%cr0" : : "r" (value & ~0x00010000));
+#endif
 }
 
 static void enable_page_protection(void) {
+#ifndef __arm__
     unsigned long value;
     asm volatile("mov %%cr0, %0" : "=r" (value));
 
@@ -133,6 +137,7 @@ static void enable_page_protection(void) {
         return;
 
     asm volatile("mov %0, %%cr0" : : "r" (value | 0x00010000));
+#endif
 }
 
 /* new_socket - function to block or allow a new socket
@@ -227,10 +232,12 @@ void unHook(void) {
 	disable_page_protection();
 
 	/* Reset old syscall table */
-#ifdef __x86_64__
+#ifndef __i386__
 	st[__NR_socket]				= (void *)old_socket;
 #endif
+#ifndef __arm__
 	ia32_st[__NR_socketcall]	= (void *)old_socketcall;
+#endif
 
 	enable_page_protection();
 }
@@ -238,15 +245,17 @@ void unHook(void) {
 void hook(void) {
 	disable_page_protection();
 
-	/* 64 bits sys_socket */
-#ifdef __x86_64__
+	/* Intel 64 bits and ARM sys_socket */
+#ifndef __x86_64__
 	old_socket		= (void *)st[__NR_socket];
 	st[__NR_socket]	= (void *)new_socket;
 #endif
 
-	/* 32 bit sys_socketcall */
+	/* Intel 32 bit (real/emul) sys_socketcall */
+#ifndef __arm__
 	old_socketcall				= (void *)ia32_st[__NR_socketcall];
 	ia32_st[__NR_socketcall]	= (void *)new_socketcall;
+#endif
 
 	enable_page_protection();
 }
