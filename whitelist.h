@@ -25,6 +25,7 @@ char *whitelist_exact[] = {
 	"wpa_supplicant",
 	"NetworkManager",
 	"crda",
+	"dnsmasq",
 
 	// SYSTEM
 	"systemd-udevd",
