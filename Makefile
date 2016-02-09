@@ -18,17 +18,24 @@ install: all
 unload:
 	sudo rmmod laf
 
-load:
+load: all
 	sudo insmod laf.ko
 
-reset: unload load
+reset: clean unload load
 
 clean:
 	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
 
-clean-test:
-	rm -f lalala
+test: test-send test-recv
 
-test:
-	gcc test.c -o lalala
-	./lalala
+clean-test:
+	rm -f test-recv
+	rm -f test-send
+
+test-recv:
+	gcc test-recv.c -o test-recv
+	./test-recv
+
+test-send:
+	gcc test-send.c -o test-send
+	./test-send

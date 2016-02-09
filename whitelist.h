@@ -25,7 +25,6 @@ char *whitelist_exact[] = {
 	"wpa_supplicant",
 	"NetworkManager",
 	"crda",
-	"dnsmasq",
 
 	// SYSTEM
 	"systemd-udevd",
@@ -70,6 +69,7 @@ char *whitelist_exact[] = {
 //	"exploit-db",
 
 	// VIRTUALBOX
+	"vminfo",
 	"EMT",
 	"NAT",
 
