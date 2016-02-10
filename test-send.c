@@ -45,7 +45,10 @@ void send_event(int sock)
     struct msghdr msg;
     struct iovec iov;
 	struct nlmsghdr *nlh = NULL;
-	char buffer[] = "1Prueba";
+//	char buffer[] = "1";
+	char buffer[] = "2";
+//	char buffer[] = "3ping/curl/wget/nc/nmap/host/ssh/telnet/ftp/nslookup/ip/route/ntpdate/iptables/dhclient/ifconfig/iwconfig/wpa_supplicant/NetworkManager/crda/systemd-udevd/rpcbind/rpc.statd/avahi-daemon/minissdpd/colord-sane/cups-browsed/cupsd/sshd/pool/systemd/stunnel4/exim4/sendmail/http/gnome-settings-/clock-applet/mate-sensors-ap/mate-system-mon/xbrlapi/radare2/git/git-remote-http/dig/python/qtcreator/merssh/qemu-system-arm/vminfo/EMT/NAT/steam/steamwebhelper/arma3.i386/defcon.bin.x86/mb_warband_linu/ts3client_linux/eurotrucks2/X-Plane-x86_64/KSP.x86/tld.x86_64/PrisionArchitect/";
+//	char buffer[] = "4Socket Thread/Resolver/Res~ver/DNS Res~er/MTPThread/Qt HTTP thread/Qt bearer threa/CHTTPClientThre/CIPCServer::Thr/CSteamControlle/Chrome_IOThread/WorkerPool/NetworkChangeNo/";
 	int buflen = NLMSG_SPACE(strlen(buffer) + 1);
     int ret;
 

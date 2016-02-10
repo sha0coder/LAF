@@ -27,10 +27,8 @@
 
 #include <net/sock.h>
 
-#include "whitelist.h"
-
 #define BLOCKED				-1
-#define MAX_WHITELIST		255
+#define MAX_WHITELIST		4092
 #define NETLINK_LAF_GRP		18	
 #define NETLINK_LAF_USR		NETLINK_USERSOCK
 
@@ -66,37 +64,136 @@ static struct ctl_table_header *busy_sysctl_header;
 
 struct sock *laf_netlink = NULL;
 
+char *whitelist_exact  [MAX_WHITELIST];
+char *whitelist_similar[MAX_WHITELIST];
+
 asmlinkage long (*old_socketcall) (int call, unsigned long __user *args);
 asmlinkage int (*old_socket) (int domain, int type, int protocol);
 
 unsigned long **st;
 unsigned long **ia32_st;
 
+static void laf_netlink_send(char * msg_out, unsigned long msg_out_size) {
+	int res = 0;
+	struct nlmsghdr *nlh;
+	struct sk_buff  *skb_out;
+
+	skb_out = nlmsg_new(NLMSG_ALIGN(msg_out_size), GFP_KERNEL);
+
+	if (!skb_out) {
+		printk(KERN_ALERT "LAF: Failed to allocate new skb.\n");
+		kfree(msg_out);
+		return;
+	}
+
+	nlh = nlmsg_put(skb_out, 0, 1, NLMSG_DONE, msg_out_size, 0);
+	strncpy(nlmsg_data(nlh), msg_out, msg_out_size - 1);
+
+	res = nlmsg_multicast(laf_netlink, skb_out, 0, NETLINK_LAF_GRP, GFP_KERNEL);
+
+	/* a client must be listening, if not it will throw a -3 error (only in debug mode) */
+	if ( res < 0 && DEBUG)
+		printk(KERN_ALERT "LAF: Error %i sending netlink multicast.\n", res);
+
+}
+
+static void laf_get_whitelist (char **whitelist) {
+	unsigned long msg_out_len = 0;
+	char *msg_out;
+	int i=0;
+
+	for (i=0; i<MAX_WHITELIST; i++) {
+		if (whitelist[i] == NULL)
+			break;
+		msg_out_len = msg_out_len + strlen(whitelist[i]) + 1;
+	}
+
+	if (msg_out_len == 0)
+		return;
+
+	/* alloc the string size + end null */
+	msg_out = kmalloc(msg_out_len + 1,GFP_KERNEL);
+	memset(msg_out, 0, msg_out_len);
+
+	for (i=0; i<MAX_WHITELIST; i++) {
+		if (whitelist[i] == NULL)
+			break;
+		strcat(msg_out,whitelist[i]);
+		strcat(msg_out,"/");
+	}
+
+	if (DEBUG) {
+		printk(KERN_INFO "LAF: print whitelist.\n");
+		printk(KERN_INFO "LAF: %s\n", msg_out);
+	}
+
+	laf_netlink_send(msg_out, msg_out_len);
+
+	kfree(msg_out);
+}
+
+static void laf_set_whitelist(char *msg_raw, char **whitelist) {
+	int i = 0;
+	char *token;
+	char *msg_in  = msg_raw + 1;
+	const char delim[] = "/";
+
+	if (DEBUG)
+		printk(KERN_INFO "LAF: update whitelist.\n");
+
+	/* clean and kfree all whitelist matrix */
+	for (i=0; i<MAX_WHITELIST; i++) {
+		if (whitelist[i] != NULL) {
+			kfree(whitelist[i]);
+			whitelist[i]  = NULL;
+		}
+	}
+
+	/* iter msg_in */
+	token = strsep(&msg_in, delim);
+
+	i = 0;
+	while( token != NULL ) 
+	{
+		if (i >= (MAX_WHITELIST - 1)) {
+			printk(KERN_INFO "LAF: whitelist limit reached (%i).\n", MAX_WHITELIST);
+			break;
+		}
+		if (strlen(token) > 0) {
+			if (DEBUG)
+				printk(KERN_INFO "LAF: exact - %s\n", token );
+			whitelist[i] = kmalloc(strlen(token) + 1, GFP_KERNEL);
+			strcpy(whitelist[i],token);
+			i++;
+		}
+		token = strsep(&msg_in, delim);
+	}
+	whitelist[i] = NULL;
+}
+
 static void laf_netlink_recv(struct sk_buff *skb) {
 	struct nlmsghdr *nlh;
 	char *msg_raw;
-	char *msg;
 
 	/* the first msg_raw char is the command, the next is the payload and points to msg */
 	nlh=(struct nlmsghdr*)skb->data;
 	msg_raw = (char*)nlmsg_data(nlh);
-	msg = msg_raw + 1;
 
 	if (DEBUG)
-		printk(KERN_INFO "LAF: recv from %d - %s\n",nlh->nlmsg_pid,(char*)nlmsg_data(nlh));
+		printk(KERN_INFO "LAF: recv from %d - %s\n", nlh->nlmsg_pid, msg_raw);
 
 	switch (msg_raw[0]) {
 		case '1':
-			printk(KERN_INFO "LAF: print  whitelist_exact.\n");
+			laf_get_whitelist(whitelist_exact);
 			break;
 		case '2':
-			printk(KERN_INFO "LAF: print  whitelist_similar.\n");
+			laf_get_whitelist(whitelist_similar);
 			break;
 		case '3':
-			printk(KERN_INFO "LAF: update whitelist_exact.\n");
+			laf_set_whitelist(msg_raw, whitelist_exact);
 			break;
 		case '4':
-			printk(KERN_INFO "LAF: update whitelist_similar.\n");
+			laf_set_whitelist(msg_raw, whitelist_similar);
 			break;
 		default:
 			printk(KERN_INFO "LAF: recv -> WTF?!\n");
@@ -110,9 +207,6 @@ static void laf_send_alert(int type, int domain, int protocol, char *comm, int p
 	unsigned long new_msg_size = 0;
 	unsigned long org_msg_size = 0;
 	char *new_msg;
-	int res = 0;
-	struct nlmsghdr *nlh;
-	struct sk_buff  *skb_out;
 
 	/* kernel log */
 	switch (type) {
@@ -136,22 +230,8 @@ static void laf_send_alert(int type, int domain, int protocol, char *comm, int p
 
 	new_msg = (char *) kmalloc(new_msg_size, GFP_KERNEL);
 	sprintf(new_msg, "/%i/%i/%s/%i/%i/%s/%i", domain, protocol, comm, pid, tgid, parent_comm, parent_pid);
-	skb_out = nlmsg_new(NLMSG_ALIGN(new_msg_size), GFP_KERNEL);
 
-	if (!skb_out) {
-		printk(KERN_ALERT "LAF: Failed to allocate new skb.\n");
-		kfree(new_msg);
-		return;
-	}
-
-	nlh = nlmsg_put(skb_out, 0, 1, NLMSG_DONE, new_msg_size, 0);
-	strncpy(nlmsg_data(nlh), new_msg, new_msg_size - 1);
-
-	res = nlmsg_multicast(laf_netlink, skb_out, 0, NETLINK_LAF_GRP, GFP_KERNEL);
-
-	/* a client must be listening, if not it will throw a -3 error (only in debug mode) */
-	if ( res < 0 && DEBUG)
-		printk(KERN_ALERT "LAF: Error %i sending netlink multicast.\n", res);
+	laf_netlink_send(new_msg, new_msg_size);
 
 	kfree(new_msg);
 }
@@ -425,6 +505,8 @@ static int __init load(void) {
 }
 
 static void __exit unload(void) {
+	int i = 0;
+
 	/* restore original syscalls */
 	unHook();
 
@@ -433,6 +515,18 @@ static void __exit unload(void) {
 
 	/* unregister sysctl table */
 	unregister_sysctl_table(busy_sysctl_header);
+
+	/* free all mem */
+	for (i=0; i<MAX_WHITELIST; i++) {
+		if (whitelist_exact[i] != NULL) {
+			kfree(whitelist_exact[i]);
+			whitelist_exact[i]  = NULL;
+		}
+		if (whitelist_similar[i] != NULL) {
+			kfree(whitelist_similar[i]);
+			whitelist_similar[i]  = NULL;
+		}
+	}
 
 	printk(KERN_INFO "LAF: Unloaded\n");
 }
