@@ -5,10 +5,31 @@ This kernel driver blocks internet sockets, allowing only whitelisted process to
 
 iptables filter by ip and port but not by process name, laf.ko is a simple driver for do this.
 
+In this diagram you can see the inner working.
+
+   +--------+     add     +--------+
+   | sysctl | <---------> | laf.ko |
+   +--------+ enabled = 0 +--------+
+     ^        debug   = 0     ^
+     |        log     = 1     | upload
+     |                        | whitelist      KERNEL
+   - |  -    -    -    -    - |  -    -    -    -   -
+     |                +-------+                  USER
+     | sets           | NETLINK
+     | enabled = 1    |
+   +--------------------+   launch  +---------+
+   |       lafctl       | <-------- | systemd |
+   +--------------------+           +---------+
+             ^  read whitelist       ^
+             |                       |
+      +--------------+ +---------------------------------+
+      | /etc/laf.cfg | | /lib/systemd/system/laf.service |
+      +--------------+ +---------------------------------+
+
 
 == configure == 
 
-edit whitelist.h 
+Edit /etc/laf.cfg
 
 There are two whitelist, one is compared literally with the 
 process name who is trying to create internet sockets.
@@ -25,7 +46,11 @@ $ make install
 This will compile and copy the module on /lib/modules.
 You can load it with:
 
-$ make load
+Add the module to /etc/modules or similar...
+
+# modprobe laf
+# vi /etc/laf.cfg
+# lafctl -u -f /etc/laf.cfg
 
 If you want to see what is blocking the LAF driver:
 
@@ -42,7 +67,6 @@ tail -f /var/log/kern.log
 == filosofy ==
 
 This is not a protection agains advanced attackers, this can by bypassed for example changing the process name for a whitelisted one.
-
 The objective is detecting and/or blocking software that should not be connecting to internet, as spyware.
 
 In the past, we protected our open ports to internet, nowadays the problem is in client side, 
@@ -50,5 +74,6 @@ client apps sending data to internet.
 
 
 == authors ==
+
 @sha0coder && @capi_x
 
