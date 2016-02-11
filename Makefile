@@ -12,6 +12,7 @@ uninstall:
 	sudo rm /usr/bin/lafctl
 	sudo rm /etc/laf.cfg
 	sudo rm /lib/systemd/system/laf.service
+	sudo systemctl disable laf.service
 	sudo rmmod laf
 	sudo rm /lib/modules/$(shell uname -r)/kernel/net/laf/laf.ko
 	sudo rmdir /lib/modules/$(shell uname -r)/kernel/net/laf
@@ -21,6 +22,7 @@ install: all
 	sudo cp -f lafctl      /usr/bin
 	sudo cp -f laf.cfg     /etc
 	sudo cp -f laf.service /lib/systemd/system/
+	sudo systemctl enable laf.service
 	sudo mkdir /lib/modules/$(shell uname -r)/kernel/net/laf
 	sudo cp -f laf.ko /lib/modules/$(shell uname -r)/kernel/net/laf
 	sudo depmod -a

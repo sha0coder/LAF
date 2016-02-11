@@ -2,7 +2,12 @@
 Description=LAF - Linux Application Firewall allows only communications made from allowed processes
 
 [Service]
+Type=oneshot
 ExecStart=/usr/bin/lafctl -u -f /etc/laf.cfg
+TimeoutSec=0
+StandardOutput=tty
+RemainAfterExit=yes
+SysVStartPriority=1
 
 [Install]
 WantedBy="networking.service"
