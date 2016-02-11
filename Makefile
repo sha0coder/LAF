@@ -9,7 +9,7 @@ modules:
 	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules -Wunused-function -Werror=strict-prototypes
 
 uninstall:
-	sudo rm /usr/bin/lafcfg
+	sudo rm /usr/bin/lafctl
 	sudo rm /etc/laf.cfg
 	sudo rm /lib/systemd/system/laf.service
 	sudo rmmod laf
