@@ -43,7 +43,7 @@ int open_netlink(void)
 	sock = socket(AF_NETLINK, SOCK_RAW, NETLINK_LAF_USR);
 	if (sock < 0) {
 		fprintf(stderr, "error: can't open socket.\n");
-		return sock;
+		return -1;
 	}
 
 	memset((void *) &addr, 0, sizeof(addr));
@@ -52,6 +52,7 @@ int open_netlink(void)
 
 	if (setsockopt(sock, SOL_NETLINK, NETLINK_ADD_MEMBERSHIP, &group, sizeof(group)) < 0) {
 		fprintf(stderr, "error: can't open netlink.\n");
+		close(sock);
 	   	return -1;
    	}
 
@@ -67,13 +68,13 @@ void send_event(int sock, char *buffer)
 	int buflen = NLMSG_SPACE(strlen(buffer) + 1);
 	int ret;
 
-	memset(&msg,0,sizeof(msg));
-	memset(&nlh,0,sizeof(nlh));
+	memset(&msg,    0, sizeof(msg));
+	memset(&nlh,    0, sizeof(nlh));
 	memset(&nladdr, 0, sizeof(nladdr));
 	memset(&nladdr, 0, sizeof(nladdr));
 
 	nladdr.nl_family = AF_NETLINK;
-	nladdr.nl_pid = 0;		/* 0 = send to Linux kernel */
+	nladdr.nl_pid    = 0;	/* 0 = send to Linux kernel */
 	nladdr.nl_groups = 0;	/* 0 = unicast */
 
 	nlh = (struct nlmsghdr *)malloc(buflen);
@@ -85,7 +86,7 @@ void send_event(int sock, char *buffer)
 	strcpy(NLMSG_DATA(nlh), buffer);
 
 	iov.iov_base = (void *)nlh;
-	iov.iov_len = nlh->nlmsg_len;
+	iov.iov_len  = nlh->nlmsg_len;
 	msg.msg_name = (void *) &(nladdr);
 	msg.msg_namelen = sizeof(nladdr);
 	msg.msg_iov = &iov;
@@ -93,6 +94,7 @@ void send_event(int sock, char *buffer)
 
 	if (DEBUG)
 		printf("sending...\n");
+
 	ret = sendmsg(sock, &msg, 0);
 
 	return;
@@ -104,10 +106,10 @@ void read_event(int sock)
 	struct msghdr msg;
 	struct iovec iov;
 	char buffer[MAX_WL_NUMB];
-	int ret;
+	int  ret;
 
 	iov.iov_base = (void *) buffer;
-	iov.iov_len = sizeof(buffer);
+	iov.iov_len  = sizeof(buffer);
 	msg.msg_name = (void *) &(nladdr);
 	msg.msg_namelen = sizeof(nladdr);
 	msg.msg_iov = &iov;
@@ -124,14 +126,14 @@ void read_event(int sock)
 }
 
 int read_config (char *path, char *whitelist_exact, char *whitelist_similar) {
-	FILE * fp;
-    char * line = NULL;
-    size_t len = 0;
+	FILE   *fp;
+    char   *line = NULL;
+    size_t  len = 0;
     ssize_t read;
-	char flag_exact   = 0;
-	char flag_similar = 0;
-	int  wl_size_e    = 0;
-	int  wl_size_s    = 0;
+	char    flag_exact   = 0;
+	char    flag_similar = 0;
+	int     wl_size_e    = 0;
+	int     wl_size_s    = 0;
 
     fp = fopen(path, "r");
     if (fp == NULL) {
@@ -164,6 +166,7 @@ int read_config (char *path, char *whitelist_exact, char *whitelist_similar) {
 
 		if (wl_size_e + read >= MAX_WL_NUMB - 1 || wl_size_e + read >= MAX_WL_NUMB - 1) {
 			fprintf(stderr, "error: the section in the config file is more than %i bytes.\n", MAX_WL_NUMB);
+			fclose(fp);
 			return -1;
 		}
 
@@ -251,8 +254,10 @@ int main(int argc, char *argv[])
 		whitelist_exact[0]   = '3';
 		whitelist_similar[0] = '4';
 		
-		if (read_config(config_path, whitelist_exact, whitelist_similar) < 0)
+		if (read_config(config_path, whitelist_exact, whitelist_similar) < 0) {
+			close(nls);
 			return EXIT_FAILURE;
+		}
 
 		/* send */
 		send_event(nls, whitelist_exact);
