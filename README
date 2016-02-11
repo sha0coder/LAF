@@ -1,11 +1,11 @@
-== intro ==
+== Introduction ==
 
 LAF - Linux Application Firewall
-This kernel driver blocks internet sockets, allowing only whitelisted process to connect to LAN and internet.
+This kernel driver blocks network sockets, allowing only whitelisted process to connect to the LAN and the Internet.
 
-iptables filter by ip and port but not by process name, laf.ko is a simple driver for do this.
+While iptables filter by ip and port, it cannot filter by process name - laf.ko is a simple driver to do this.
 
-In this diagram you can see the inner working.
+The following diagram describes the inner workings:
 
    +--------+     add     +--------+
    | sysctl | <---------> | laf.ko |
@@ -27,19 +27,15 @@ In this diagram you can see the inner working.
       +--------------+ +---------------------------------+
 
 
-== configure == 
+== Configuration == 
 
 Edit /etc/laf.cfg
 
-There are two whitelist, one is compared literally with the 
-process name who is trying to create internet sockets.
+There are two whitelists. The first is for specifying the entire process name that we want to allow access to network sockets.
 
-The other whitelist is compared with strstr(), if you want allow all processnames whos name contains x word, then this is the wordlist for doing that.
+The second is for strings to be compared with strstr(), if you want to allow all process with a name containing a specific word, then this is the wordlist for doing that. For example, Chrome changes its process name, so this wordlist should be used.
 
-For example chrome has process name with variable name, then this wordlist should be used.
-
-
-== run ==
+== Installing and running ==
 
 $ make install
 
@@ -63,17 +59,13 @@ tail -f /var/log/kern.log
 [16569.004590] LAF: fam 10 proto 00 blocked: VBoxXPCOMIPCD (26102:26102) parent: systemd (1)
 [16569.048654] LAF: fam 10 proto 00 blocked: VBoxSVC (26107:26107) parent: systemd (1)
 
+== Philosophy ==
 
-== filosofy ==
+This is not a comprehensive solution against advanced attackers. There are many ways to bypass this kind of protection. However, it makes for an additional barrier for the attacker to overcome - think of it as defense in depth. The typical use case would be to isolate vainilla spyware, and to block most common shellcodes.
 
-This is not a protection agains advanced attackers, this can by bypassed for example changing the process name for a whitelisted one.
-The objective is detecting and/or blocking software that should not be connecting to internet, as spyware.
+In the past we protected our open ports to the Internet, nowadays the problem is in the client side, client apps sending data to the Internet.
 
-In the past, we protected our open ports to internet, nowadays the problem is in client side, 
-client apps sending data to internet.
+== Authors ==
 
-
-== authors ==
-
-@sha0coder && @capi_x
-
+@sha0coder: https://twitter.com/sha0coder
+@capi_x: https://twitter.com/capi_x
