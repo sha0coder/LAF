@@ -16,15 +16,15 @@
 	@license GPL-3.0 <http://www.gnu.org/licenses/gpl-3.0.txt>
 */
 
-#include <linux/module.h>	/* Needed by all modules */
-#include <linux/kernel.h>	/* Needed for KERN_INFO */
-#include <linux/init.h>		/* Needed for the macros */
-#include <linux/limits.h>	// ULLONG_MAX
+#include <linux/module.h>	/* Needed by all modules	*/
+#include <linux/kernel.h>	/* Needed for KERN_INFO		*/
+#include <linux/init.h>		/* Needed for the macros	*/
+#include <linux/limits.h>	/* ULLONG_MAX				*/
 #include <linux/net.h>		
 #include <linux/netlink.h>
 #include <linux/skbuff.h>
-#include <linux/sched.h> 	// current struct
-#include <linux/in.h>		// sockaddr_in
+#include <linux/sched.h> 	/* current struct			*/
+#include <linux/in.h>		/* sockaddr_in				*/
 #include <linux/socket.h>
 #include <linux/syscalls.h>
 #include <linux/sysctl.h>
@@ -46,10 +46,10 @@
 # define IA32_AF_INET		0x2
 #endif
 
-
-// ENABLED 0 -> don't block sockets | ENABLED 1 -> block sockets
-// DEBUG   1 -> log allowed sockets
-// LOG     0 -> don't log blocks    | LOG 1 -> log blocks
+/*
+ * ENABLED 0 -> don't block sockets | ENABLED 1 -> block sockets
+ * DEBUG   1 -> log allowed sockets
+ * LOG     0 -> don't log blocks    | LOG 1 -> log blocks			*/
 static int ENABLED =		0;
 static int DEBUG   =		0;
 static int LOG     =		1;
@@ -205,6 +205,7 @@ static void laf_send_alert(int type, int domain, int protocol, char *comm, int p
 	char *new_msg;
 
 	/* kernel log */
+	if (LOG)
 	switch (type) {
 		case LAF_BLOCK_S:
 			printk(KERN_INFO "LAF: fam %02d proto %02d blocked: %s (%i:%i) parent: %s (%i)\n", domain, protocol, comm, pid, tgid, parent_comm, parent_pid);
