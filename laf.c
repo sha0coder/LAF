@@ -50,27 +50,27 @@
  * ENABLED 0 -> don't block sockets | ENABLED 1 -> block sockets
  * DEBUG   1 -> log allowed sockets
  * LOG     0 -> don't log blocks    | LOG 1 -> log blocks			*/
-static int ENABLED =		0;
-static int DEBUG   =		0;
-static int LOG     =		1;
+static int ENABLED 		  =	0;
+static int DEBUG   		  =	0;
+static int LOG     		  =	1;
 
 static int sysctl_min_val =	0;
 static int sysctl_max_val =	1;
 static struct ctl_table_header *busy_sysctl_header;
 
-struct sock *laf_netlink = NULL;
+struct sock *laf_netlink  = NULL;
 
 char *whitelist_exact  [MAX_WHITELIST];
 char *whitelist_similar[MAX_WHITELIST];
 
-asmlinkage long (*old_socketcall) (int call, unsigned long __user *args);
-asmlinkage int (*old_socket) (int domain, int type, int protocol);
+asmlinkage long (*old_socketcall) (int call,   unsigned long __user *args);
+asmlinkage int  (*old_socket)     (int domain, int type, int protocol);
 
 unsigned long **st;
 unsigned long **ia32_st;
 
 static void laf_netlink_send(char * msg_out, unsigned long msg_out_size) {
-	int res = 0;
+	int    res = 0;
 	struct nlmsghdr *nlh;
 	struct sk_buff  *skb_out;
 
@@ -96,7 +96,9 @@ static void laf_netlink_send(char * msg_out, unsigned long msg_out_size) {
 static void laf_get_whitelist (char **whitelist) {
 	unsigned long msg_out_len = 0;
 	char *msg_out;
-	int i=0;
+	int  i=0;
+
+	printk(KERN_INFO "LAF: Request - get whitelist.\n");
 
 	for (i=0; i<MAX_WHITELIST; i++) {
 		if (whitelist[i] == NULL)
@@ -109,7 +111,7 @@ static void laf_get_whitelist (char **whitelist) {
 
 	/* alloc the string size + end null */
 	msg_out = kmalloc(msg_out_len + 1,GFP_KERNEL);
-	memset(msg_out, 0, msg_out_len);
+	memset (msg_out, 0, msg_out_len);
 
 	for (i=0; i<MAX_WHITELIST; i++) {
 		if (whitelist[i] == NULL)
@@ -118,10 +120,8 @@ static void laf_get_whitelist (char **whitelist) {
 		strcat(msg_out,"/");
 	}
 
-	if (DEBUG) {
-		printk(KERN_INFO "LAF: print whitelist.\n");
+	if (DEBUG)
 		printk(KERN_INFO "LAF: %s\n", msg_out);
-	}
 
 	laf_netlink_send(msg_out, msg_out_len);
 
@@ -129,13 +129,12 @@ static void laf_get_whitelist (char **whitelist) {
 }
 
 static void laf_set_whitelist(char *msg_raw, char **whitelist) {
-	int i = 0;
+	int  i = 0;
 	char *token;
 	char *msg_in  = msg_raw + 1;
 	const char delim[] = "/";
 
-	if (DEBUG)
-		printk(KERN_INFO "LAF: update whitelist.\n");
+	printk(KERN_INFO "LAF: Request - update whitelist.\n");
 
 	/* clean and kfree all whitelist matrix */
 	for (i=0; i<MAX_WHITELIST; i++) {
@@ -169,10 +168,10 @@ static void laf_set_whitelist(char *msg_raw, char **whitelist) {
 
 static void laf_netlink_recv(struct sk_buff *skb) {
 	struct nlmsghdr *nlh;
-	char *msg_raw;
+	char   *msg_raw;
 
 	/* the first msg_raw char is the command, the next is the payload and points to msg */
-	nlh=(struct nlmsghdr*)skb->data;
+	nlh = (struct nlmsghdr*)skb->data;
 	msg_raw = (char*)nlmsg_data(nlh);
 
 	if (DEBUG)
@@ -223,7 +222,7 @@ static void laf_send_alert(int type, int domain, int protocol, char *comm, int p
 
 	/* netlink broadcast */
 	org_msg_size = strlen(comm) + strlen(parent_comm) + ( sizeof(int) * 6 ) + 1; 
-	new_msg_size = org_msg_size + 8; // 7 slash + 1 null
+	new_msg_size = org_msg_size + 8; /* 7 slash + 1 null */
 
 	new_msg = (char *) kmalloc(new_msg_size, GFP_KERNEL);
 	sprintf(new_msg, "/%i/%i/%s/%i/%i/%s/%i", domain, protocol, comm, pid, tgid, parent_comm, parent_pid);
@@ -236,7 +235,7 @@ static void laf_send_alert(int type, int domain, int protocol, char *comm, int p
 static unsigned long **acquire_sys_call_table(void)
 {
 	unsigned long int offset = PAGE_OFFSET;
-	unsigned long **sct;
+	unsigned long     **sct;
 
 	while (offset < ULLONG_MAX) {
 		sct = (unsigned long **)offset;
@@ -337,7 +336,7 @@ static void enable_page_protection(void) {
  * +------------+---------------------------+----+
  *
  * This function also check if the socket is whitelisted in the
- * file: whitelist.h
+ * whitelist.
  */ 
 
 asmlinkage int new_socket(int domain, int type, int protocol) {
