@@ -1,0 +1,8 @@
+[Unit]
+Description=LAF - Linux Application Firewall allows only communications made from allowed processes
+
+[Service]
+ExecStart=/usr/bin/lafctl -u -f /etc/laf.cfg
+
+[Install]
+WantedBy="networking.service"
