@@ -3,7 +3,8 @@ Description=LAF - Linux Application Firewall allows only communications made fro
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/lafctl -u -f /etc/laf.cfg
+ExecStartPre=/usr/bin/lafctl -u -f /etc/laf.cfg
+ExecStart=/usr/bin/lafd
 TimeoutSec=0
 StandardOutput=tty
 RemainAfterExit=yes
