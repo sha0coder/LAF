@@ -8,20 +8,20 @@ While iptables filter by ip and port, it cannot filter by process name - laf.ko 
 The following diagram describes the inner workings:
 
    +--------+     add     +--------+
-   | sysctl | <---------> | laf.ko |
-   +--------+ enabled = 0 +--------+
-     ^        debug   = 0     ^
-     |        log     = 1     | upload
-     |                        | whitelist      KERNEL
-   - |  -    -    -    -    - |  -    -    -    -   -
-     |                +-------+                  USER
-     | sets           | NETLINK
-     | enabled = 1    |
-   +--------------------+   launch  +---------+
-   |       lafctl       | <-------- | systemd |
-   +--------------------+           +---------+
-             ^  read whitelist       ^
-             |                       |
+   | sysctl | <---------> | laf.ko | --------+
+   +--------+ enabled = 0 +--------+ NETLINK |
+     ^        debug   = 0     ^              |
+     |        log     = 1     | upload       |
+     |                        | whitelist    | get events              KERNEL
+   - |  -    -    -    -    - |  -    -    - |  -   -   -    -    -    -    -
+     |                +-------+           +------+  events  +------+     USER
+     | sets           | NETLINK           | lafd | -------> | DBus |
+     | enabled = 1    |                   +------+          +------+
+   +--------------------+   launch  +---------+                |
+   |       lafctl       | <-------- | systemd |                | QtDBus
+   +--------------------+           +---------+             +------+
+             ^  read whitelist       ^                      | qlaf | 
+             |                       |                      +------+
       +--------------+ +---------------------------------+
       | /etc/laf.cfg | | /lib/systemd/system/laf.service |
       +--------------+ +---------------------------------+
