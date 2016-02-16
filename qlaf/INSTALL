@@ -1,0 +1,7 @@
+To build this project you need this dependences:
+$ apt install qdbus-qt5 libqt5dbus5 qt5-qmake
+
+Build time!
+$ qmake
+$ make
+$ sudo cp -f qlaf /usr/bin/qlaf

@@ -22,9 +22,9 @@ void send_signal(DBusConnection *conn, char* sigvalue)
 		printf("Sending signal with value %s\n", sigvalue);
 
 	// create a signal & check for errors 
-	msg = dbus_message_new_signal(	"/laf/signal/Alert",	// object name of the signal
-					"laf.signal.Type",	// interface name of the signal
-					"Event");		// name of the signal
+	msg = dbus_message_new_signal(	"/laf/signal/alert",	// object name of the signal
+									"laf.signal.source",	// interface name of the signal
+									"event");				// name of the signal
 	if (NULL == msg) 
 	{ 
 	  fprintf(stderr, "Message Null\n"); 

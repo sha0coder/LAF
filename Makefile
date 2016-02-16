@@ -41,7 +41,7 @@ install: all
 	sudo cp -f laf.service /lib/systemd/system/
 	sudo cp -f lafd.conf   /etc/dbus-1/system.d/
 	sudo systemctl enable laf.service
-	sudo mkdir /lib/modules/$(shell uname -r)/kernel/net/laf
+	sudo mkdir -p /lib/modules/$(shell uname -r)/kernel/net/laf
 	sudo cp -f laf.ko /lib/modules/$(shell uname -r)/kernel/net/laf
 	sudo depmod -a
 	echo "** NOW ADD laf TO YOUR /etc/modules.conf OR /etc/modules-load.d FILE **"

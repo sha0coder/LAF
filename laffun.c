@@ -206,7 +206,7 @@ int laf_set_sysctl(int status) {
 	sys_enable_fp = fopen("/proc/sys/kernel/laf/enabled", "w");
 
 	if (sys_enable_fp) {
-		fprintf(sys_enable_fp, "%i%c", status, '\0');
+		fprintf(sys_enable_fp, "%i\n%c", status, '\0');
 		fclose (sys_enable_fp);
 	} else
 		return -1;

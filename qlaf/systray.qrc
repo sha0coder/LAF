@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/laf_green.svg</file>
+        <file>images/laf_red.svg</file>
+        <file>images/laf_green.png</file>
+        <file>images/laf_red.png</file>
+    </qresource>
+</RCC>
