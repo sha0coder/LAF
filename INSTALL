@@ -1,0 +1,23 @@
+** DEPENDENCIES **
+# apt install libdbus-1-dev linux-headers-amd64 
+
+The usual build is:
+$ make
+$ make install
+
+* Add the laf entry in the /etc/modules.conf (or your distro similar name)
+
+To launch the lafd and set the whitelist:
+# systemd start laf.service
+
+To make ONLY the kernel module
+$ make modules
+$ make modules-install
+
+Uninstall procedure:
+$ make uninstall
+
+(and only the kernel module)
+$ make modules-uninstall
+
+** Note: the whitelist is in: /etc/laf.cfg **

@@ -1,4 +1,4 @@
-To build this project you need this dependences:
+To build this project you need this dependencies:
 $ apt install qdbus-qt5 libqt5dbus5 qt5-qmake
 
 Build time!

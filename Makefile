@@ -22,6 +22,15 @@ lafd:
 modules:
 	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules -Wunused-function -Werror=strict-prototypes
 
+modules-install:
+	sudo cp -f laf.ko /lib/modules/$(shell uname -r)/kernel/net/laf
+	sudo depmod -a
+
+modules-uninstall:
+	sudo rmmod laf
+	sudo rm /lib/modules/$(shell uname -r)/kernel/net/laf/laf.ko
+	sudo rmdir /lib/modules/$(shell uname -r)/kernel/net/laf
+
 uninstall:
 	sudo rm /usr/bin/lafctl
 	sudo rm /usr/bin/lafd
