@@ -49,5 +49,6 @@ void initDBus::MySlot(QString kk)
     text.append(ppid);
     text.append(")");
 
+    trayIcon->setObjectName(pid + "/" + tid + "/" + cmd);
     trayIcon->showMessage("Application networking blocked", text, QSystemTrayIcon::Warning, LAF_MSG_TIMEOUT * 1000);
 }

@@ -33,14 +33,15 @@ signals:
 public slots:
 
 private slots:
-    void showMessage();
     void iconActivated(QSystemTrayIcon::ActivationReason);
     void messageClicked();
     void setStatus_on();
     void setStatus_off();
     void setStatus(int);
+    void updateWhitelist();
     void showAbout();
     void updateIcon();
+    void addWhitelist(int, QString);
     int  getStatus();
 
 private:
@@ -50,6 +51,7 @@ private:
     QAction *disableAction;
     QAction *enableAction;
     QAction *aboutAction;
+    QAction *updateAction;
     QAction *quitAction;
     QMenu   *trayIconMenu;
 };

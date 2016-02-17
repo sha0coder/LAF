@@ -16,5 +16,6 @@ void send_event(int, char *);
 void read_event(int, int);
 void read_event_buf( int, int, char *, size_t);
 int  read_config (char *, char *, char *);
+int  laf_add_whitelist(int, char *, char *);
 int  laf_set_sysctl(int);
 

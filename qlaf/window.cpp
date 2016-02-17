@@ -32,7 +32,6 @@ void Window::setStatus(int status) {
 
     QString program = "pkexec";
     QStringList arguments;
-
     QProcess *myProcess = new QProcess(this);
 
     arguments << "lafctl";
@@ -42,7 +41,6 @@ void Window::setStatus(int status) {
         arguments << "-e";
 
     myProcess->start(program, arguments);
-
     connect(myProcess, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(updateIcon()));
 }
 
@@ -54,9 +52,9 @@ void Window::showAbout()
 void Window::updateIcon()
 {
     if (getStatus())
-        trayIcon->setIcon(QIcon(":/images/laf_green.png"));
+        trayIcon->setIcon(QIcon(":/icons/laf_green.svg"));
     else
-        trayIcon->setIcon(QIcon(":/images/laf_red.png"));
+        trayIcon->setIcon(QIcon(":/icons/laf_red.svg"));
 }
 
 int Window::getStatus()
@@ -76,6 +74,18 @@ int Window::getStatus()
     return ret;
 }
 
+void Window::updateWhitelist()
+{
+    QString program = "pkexec";
+    QStringList arguments;
+    QProcess *myProcess = new QProcess(this);
+
+    arguments << "lafctl" << "-u";
+    myProcess->start(program, arguments);
+
+    connect(myProcess, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(updateWhitelist_slot()));
+}
+
 void Window::createActions()
 {
     disableAction = new QAction(tr("&Disable LAF"), this);
@@ -83,6 +93,9 @@ void Window::createActions()
 
     enableAction = new QAction(tr("&Enable LAF"), this);
     connect(enableAction, SIGNAL(triggered()), this, SLOT(setStatus_off()));
+
+    updateAction = new QAction(tr("&Update whitelist"), this);
+    connect(updateAction, SIGNAL(triggered()), this, SLOT(updateWhitelist()));
 
     aboutAction = new QAction(tr("&About"), this);
     connect(aboutAction, SIGNAL(triggered()), this, SLOT(showAbout()));
@@ -97,6 +110,7 @@ void Window::createTrayIcon()
 
     trayIconMenu->addAction(disableAction);
     trayIconMenu->addAction(enableAction);
+    trayIconMenu->addAction(updateAction);
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(aboutAction);
     trayIconMenu->addAction(quitAction);
@@ -106,16 +120,34 @@ void Window::createTrayIcon()
 }
 
 void Window::messageClicked()
- {
-     QMessageBox::information(0, tr("TODO"),
-                                 tr("Sorry men, i'm working on this feature :/"));
- }
-
-void Window::showMessage()
 {
-    //QSystemTrayIcon::MessageIcon icon = QSystemTrayIcon::MessageIcon();
+    int     pid = trayIcon->objectName().split('/')[0].toInt();
+    int     tid = trayIcon->objectName().split('/')[1].toInt();
+    QString cmd = trayIcon->objectName().split('/')[2];
 
-    trayIcon->showMessage("Application networking blocked", "test", QSystemTrayIcon::Warning, LAF_MSG_TIMEOUT * 1000);
+    QString text = QString(tr("Do you want add \"%1\" to the whitelist?").arg(cmd));
+    int ret = QMessageBox::question(0, tr("Add program to the whitelist"), text, QMessageBox::Yes, QMessageBox::No);
+
+    if(ret == QMessageBox::Yes) {
+        if (pid == tid)
+            addWhitelist(0,cmd);
+        else
+            addWhitelist(1,cmd);
+    }
+}
+
+void Window::addWhitelist(int similar, QString cmd)
+{
+    QString program = "pkexec";
+    QStringList arguments;
+    QProcess *myProcess = new QProcess(this);
+
+    if (similar)
+        arguments << "lafctl" << "-f" << "/tmp/laf.cfg" << "-a" << "1" << cmd;
+    else
+        arguments << "lafctl" << "-f" << "/tmp/laf.cfg" << "-a" << "0" << cmd;
+
+    myProcess->start(program, arguments);
 }
 
 void Window::iconActivated(QSystemTrayIcon::ActivationReason reason)
@@ -131,7 +163,7 @@ void Window::iconActivated(QSystemTrayIcon::ActivationReason reason)
 
         break;
     case QSystemTrayIcon::MiddleClick:
-            showMessage();
+            updateIcon();
         break;
     default:
         ;

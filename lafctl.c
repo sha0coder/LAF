@@ -17,7 +17,7 @@
 
 #include "laffun.h"
 
-#define HELP_MSG	"Usage: %s [-uged] [-f config_file]\n\nFlags:\n\t-u\t\tUpdate the current LAF config.\n\t-g\t\tGet the current LAF config.\n\t-e\t\tEnable  the LAF firewall module\n\t-d\t\tDisable the LAF firewall module\n\t-f config_file\tThe config file path.\n"
+#define HELP_MSG	"Usage: %s [-uged] [-f config_file] [-a [0|1] cmd]\n\nFlags:\n\t-u\t\tUpdate the current LAF config.\n\t-g\t\tGet the current LAF config.\n\t-e\t\tEnable  the LAF firewall module\n\t-d\t\tDisable the LAF firewall module\n\t-f config_file\tThe config file path.\n\t-a [0|1] cmd\tAdd command to the whitelist (1 -> similar; 0 -> exact)\n"
 
 char config_path[MAX_PATH] = "/etc/laf.cfg";
 
@@ -25,19 +25,27 @@ int main(int argc, char *argv[])
 {
 	char *whitelist_exact   = NULL;
 	char *whitelist_similar = NULL;
-	int  nls;
-	int  c;
-	char flag_u = 0, flag_g = 0;
+	char *cmd, *type;
+	int  nls, c, i;
+	char flag_u = 0, flag_g = 0, flag_a = 0;
 
 	if (argc < 2) {
 		fprintf(stderr, HELP_MSG, argv[0]);
 		return EXIT_FAILURE;
 	}
 
-	while ((c = getopt (argc, argv, ":f:uged")) != -1)
+	while ((c = getopt (argc, argv, "a:f:uged")) != -1)
 		switch (c) {
 			case 'f':
 				strncpy(config_path, optarg, MAX_PATH - 1);
+				break;
+			case 'a':
+				for (i=0; i<10; i++)
+					if (argv[i] == optarg)
+						break;
+				type = argv[i];
+				cmd  = argv[i+1];
+				flag_a = 1;
 				break;
 			case 'u':
 				flag_u = 1;
@@ -60,6 +68,12 @@ int main(int argc, char *argv[])
 				return EXIT_FAILURE;
 				break;
 		}
+
+	/* Add to the whitelist */
+	if (flag_a) {
+		laf_add_whitelist(type[0] - 0x30, config_path, cmd);
+		exit(0);
+	}
 
 	/* open socket */
 	nls = open_netlink();

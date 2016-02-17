@@ -213,3 +213,66 @@ int laf_set_sysctl(int status) {
 
 	return 0;
 }
+
+
+int laf_add_whitelist(int wl_type, char *path, char *cmd) {
+	FILE   *fp;
+    char   *line = NULL;
+	char   *buffer;
+    size_t  len = 0;
+    ssize_t read;
+	char    flag_search = 0;
+	int		f_size = 0;
+	int		f_seek = 0;
+	int		cmd_len = 0, i = 0;
+
+	if (wl_type > 1)
+		return -1;
+
+    fp = fopen(path, "r+");
+    if (fp == NULL) {
+		fprintf(stderr, "error: can't read the file %s\n", path);
+		return -1;
+	}
+
+	cmd_len = strlen(cmd);
+
+    while ((read = getline(&line, &len, fp)) != -1) {
+
+		if (cmd_len == (read -1) && (strncmp(line,cmd,read -1) == 0)) {
+			fclose(fp);
+			return 1;
+		}
+
+		if ((strcmp(line,"[whitelist_exact]\n")   == 0 && wl_type == 0) || 
+			(strcmp(line,"[whitelist_similar]\n") == 0 && wl_type == 1)) {
+			f_seek = ftell(fp);
+		}
+
+	}
+
+	fseek(fp, 0, SEEK_END);
+	f_size = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
+
+	buffer = malloc((f_size + 1) * sizeof(char));
+	fread(buffer, f_size, 1, fp);
+
+	fclose(fp);
+
+    fp = fopen(path, "w+");
+	for (i=0; i < f_seek; i++)
+		fputc(buffer[i],fp);
+
+	fprintf(fp,"%s\n",cmd);
+
+	for (i=f_seek; i <= f_size; i++)
+		fputc(buffer[i],fp);
+
+	fclose(fp);
+
+	free(buffer);
+
+	return 0;
+}
+
