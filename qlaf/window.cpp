@@ -143,9 +143,9 @@ void Window::addWhitelist(int similar, QString cmd)
     QProcess *myProcess = new QProcess(this);
 
     if (similar)
-        arguments << "lafctl" << "-f" << "/tmp/laf.cfg" << "-a" << "1" << cmd;
+        arguments << "lafctl" << "-a" << "1" << cmd;
     else
-        arguments << "lafctl" << "-f" << "/tmp/laf.cfg" << "-a" << "0" << cmd;
+        arguments << "lafctl" << "-a" << "0" << cmd;
 
     myProcess->start(program, arguments);
 }
