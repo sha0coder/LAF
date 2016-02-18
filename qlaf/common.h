@@ -5,3 +5,4 @@
 
 #define LAF_MSG_TIMEOUT 30
 #define VERSION         "0.1"
+#define UNUSED(x)		(void)(x)

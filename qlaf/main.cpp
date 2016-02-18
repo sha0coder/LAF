@@ -13,10 +13,12 @@ int main(int argc, char *argv[])
 
     Window window;
     window.setWindowIcon(QIcon(":/icons/laf_icon.svg"));
+    window.setWindowTitle("qLAF - Linux Application Firewall");
 
     initDBus dbus;
     dbus.setup();
-    dbus.trayIcon = window.trayIcon;
+
+    QObject::connect(&dbus, SIGNAL(recvEvent(QString)), &window, SLOT(addEvent(QString)));
 
     return app.exec();
 }

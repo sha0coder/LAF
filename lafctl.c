@@ -70,10 +70,8 @@ int main(int argc, char *argv[])
 		}
 
 	/* Add to the whitelist */
-	if (flag_a) {
+	if (flag_a)
 		laf_add_whitelist(type[0] - 0x30, config_path, cmd);
-		exit(0);
-	}
 
 	/* open socket */
 	nls = open_netlink();

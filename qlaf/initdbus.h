@@ -5,6 +5,8 @@
 #include <QDebug>
 #include <QDBusConnection>
 #include <QSystemTrayIcon>
+#include <QTableWidget>
+#include <QDate>
 
 #include "common.h"
 
@@ -15,11 +17,13 @@ public:
     explicit initDBus(QObject *parent = 0);
     void setup();
     QSystemTrayIcon *trayIcon;
+    QTableWidget    *table;
 
 signals:
+    void recvEvent(QString);
 
 public slots:
-    void MySlot(QString);
+    void recvSlot(QString);
 
 };
 

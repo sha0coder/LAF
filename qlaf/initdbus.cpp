@@ -19,36 +19,12 @@ void initDBus::setup()
                         "To start it, run:\n"
                         "\teval `dbus-launch --auto-syntax`\n");
 
-    bool conn = bus.connect("laf.signal.source","/laf/signal/alert","laf.signal.source","event",this,SLOT(MySlot(QString)));
+    bool conn = bus.connect("laf.signal.source","/laf/signal/alert","laf.signal.source","event",this,SLOT(recvSlot(QString)));
 
     if (!conn) qDebug() << "conn: not connected";
 }
 
-void initDBus::MySlot(QString kk)
+void initDBus::recvSlot(QString event)
 {
-    QString fam   = kk.split('/')[1];
-    QString proto = kk.split('/')[2];
-    QString cmd   = kk.split('/')[3];
-    QString pid   = kk.split('/')[4];
-    QString tid   = kk.split('/')[5];
-    QString pcmd  = kk.split('/')[6];
-    QString ppid  = kk.split('/')[7];
-
-    QString text;
-    text.append("FAM: ");
-    text.append(fam);
-    text.append(" PROTO: ");
-    text.append(proto);
-    text.append(" CMD: ");
-    text.append(cmd);
-    text.append(" (");
-    text.append(pid);
-    text.append(") PCMD: ");
-    text.append(pcmd);
-    text.append(" (");
-    text.append(ppid);
-    text.append(")");
-
-    trayIcon->setObjectName(pid + "/" + tid + "/" + cmd);
-    trayIcon->showMessage("Application networking blocked", text, QSystemTrayIcon::Warning, LAF_MSG_TIMEOUT * 1000);
+    emit recvEvent(event);
 }

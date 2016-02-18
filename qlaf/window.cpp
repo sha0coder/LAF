@@ -13,11 +13,82 @@ Window::Window(QWidget *parent) :
     updateIcon();
     trayIcon->show();
 
+    QVBoxLayout *layout  = new QVBoxLayout(this);
+    QToolBar    *toolbar = new QToolBar;
+    QLabel      *label   = new QLabel;
+
+    table = new QTableWidget(0,8);
+    table->setColumnWidth(0,160);
+    table->setColumnWidth(1,60);
+    table->setColumnWidth(2,60);
+    table->setColumnWidth(3,180);
+    table->setColumnWidth(4,60);
+    table->setColumnWidth(5,60);
+    table->setColumnWidth(6,180);
+    table->setColumnWidth(7,60);
+
+    label->setText(tr("Event Log"));
+    this->resize(900,500);
+
+    layout->addWidget(toolbar);
+    layout->addWidget(label);
+    layout->addWidget(table);
+
+    QStringList header;
+    header << tr("Date") << tr("Family") << tr("Protocol") << tr("Command") << "PID" << "TID" << tr("Parent") << "PPID";
+    table->setHorizontalHeaderLabels(header);
+
     qDebug() << "Program started!";
 }
 
 Window::~Window()
 {
+}
+
+void Window::addEvent(QString event)
+{
+    QString fam   = event.split('/')[1];
+    QString proto = event.split('/')[2];
+    QString cmd   = event.split('/')[3];
+    QString pid   = event.split('/')[4];
+    QString tid   = event.split('/')[5];
+    QString pcmd  = event.split('/')[6];
+    QString ppid  = event.split('/')[7];
+
+    QString text;
+    text.append("FAM: ");
+    text.append(fam);
+    text.append(" PROTO: ");
+    text.append(proto);
+    text.append(" CMD: ");
+    text.append(cmd);
+    text.append(" (");
+    text.append(pid);
+    text.append(") PCMD: ");
+    text.append(pcmd);
+    text.append(" (");
+    text.append(ppid);
+    text.append(")");
+
+    trayIcon->setObjectName(pid + "/" + tid + "/" + cmd);
+    trayIcon->showMessage("Application networking blocked", text, QSystemTrayIcon::Warning, LAF_MSG_TIMEOUT * 1000);
+
+    table->insertRow(0);
+    for (int rc = 0; rc < 8; rc++) {
+        table->setItem(0,rc,new QTableWidgetItem());
+        table->item(0,rc)->setFlags(Qt::ItemIsEnabled);
+    }
+
+    table->item(0,0)->setText(QTime::currentTime().toString() + " " + QDate::currentDate().toString(Qt::ISODate));
+    table->item(0,1)->setText(fam);
+    table->item(0,2)->setText(proto);
+    table->item(0,3)->setText(cmd);
+    table->item(0,4)->setText(pid);
+    table->item(0,5)->setText(tid);
+    table->item(0,6)->setText(pcmd);
+    table->item(0,7)->setText(ppid);
+
+    connect(table, SIGNAL(cellDoubleClicked(int, int)), this, SLOT(addItemWhitelist(int, int)));
 }
 
 void Window::setStatus_on() {
@@ -91,17 +162,17 @@ void Window::createActions()
     disableAction = new QAction(tr("&Disable LAF"), this);
     connect(disableAction, SIGNAL(triggered()), this, SLOT(setStatus_on()));
 
-    enableAction = new QAction(tr("&Enable LAF"), this);
+    enableAction  = new QAction(tr("&Enable LAF"), this);
     connect(enableAction, SIGNAL(triggered()), this, SLOT(setStatus_off()));
 
-    updateAction = new QAction(tr("&Update whitelist"), this);
+    updateAction  = new QAction(tr("&Update whitelist"), this);
     connect(updateAction, SIGNAL(triggered()), this, SLOT(updateWhitelist()));
 
-    aboutAction = new QAction(tr("&About"), this);
-    connect(aboutAction, SIGNAL(triggered()), this, SLOT(showAbout()));
+    aboutAction   = new QAction(tr("&About"), this);
+    connect(aboutAction,  SIGNAL(triggered()), this, SLOT(showAbout()));
 
-    quitAction = new QAction(tr("&Quit"), this);
-    connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
+    quitAction    = new QAction(tr("&Quit"), this);
+    connect(quitAction,   SIGNAL(triggered()), qApp, SLOT(quit()));
 }
 
 void Window::createTrayIcon()
@@ -136,6 +207,24 @@ void Window::messageClicked()
     }
 }
 
+void Window::addItemWhitelist(int x, int y)
+{
+    int     pid = table->item(x, 4)->text().toInt();
+    int     tid = table->item(x, 5)->text().toInt();
+    QString cmd = table->item(x, 3)->text();
+	UNUSED(y);
+
+    QString text = QString(tr("Do you want add \"%1\" to the whitelist?").arg(cmd));
+    int ret = QMessageBox::question(0, tr("Add program to the whitelist"), text, QMessageBox::Yes, QMessageBox::No);
+
+    if(ret == QMessageBox::Yes) {
+        if (pid == tid)
+            addWhitelist(0,cmd);
+        else
+            addWhitelist(1,cmd);
+    }
+}
+
 void Window::addWhitelist(int similar, QString cmd)
 {
     QString program = "pkexec";
@@ -143,9 +232,9 @@ void Window::addWhitelist(int similar, QString cmd)
     QProcess *myProcess = new QProcess(this);
 
     if (similar)
-        arguments << "lafctl" << "-a" << "1" << cmd;
+        arguments << "lafctl" << "-a" << "1" << cmd << "-u";
     else
-        arguments << "lafctl" << "-a" << "0" << cmd;
+        arguments << "lafctl" << "-a" << "0" << cmd << "-u";
 
     myProcess->start(program, arguments);
 }

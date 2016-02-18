@@ -16,7 +16,11 @@
 #include <QPushButton>
 #include <QDebug>
 #include <QFile>
+#include <QDate>
 #include <QProcess>
+#include <QToolBar>
+#include <QVBoxLayout>
+#include <QTableWidget>
 
 #include "common.h"
 
@@ -27,10 +31,12 @@ public:
     explicit Window(QWidget *parent = 0);
     ~Window();
     QSystemTrayIcon *trayIcon;
+    QTableWidget    *table;
 
 signals:
 
 public slots:
+    void addEvent(QString);
 
 private slots:
     void iconActivated(QSystemTrayIcon::ActivationReason);
@@ -42,6 +48,7 @@ private slots:
     void showAbout();
     void updateIcon();
     void addWhitelist(int, QString);
+    void addItemWhitelist(int, int);
     int  getStatus();
 
 private:

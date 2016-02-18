@@ -112,7 +112,7 @@ void read_event(int sock, int wait)
 	if (ret < 0)
 		fprintf(stderr, "error: can't recv data.\n");
 	else
-		printf("%s\n", NLMSG_DATA((struct nlmsghdr *) &buffer));
+		printf("%s\n", (char *) NLMSG_DATA((struct nlmsghdr *) &buffer));
 }
 
 void read_event_buf(int sock, int wait, char *buf_in, size_t buf_in_len)
@@ -224,7 +224,7 @@ int laf_add_whitelist(int wl_type, char *path, char *cmd) {
 	char    flag_search = 0;
 	int		f_size = 0;
 	int		f_seek = 0;
-	int		cmd_len = 0, i = 0;
+	int		cmd_len = 0, i = 0, ret = 0;
 
 	if (wl_type > 1)
 		return -1;
@@ -256,7 +256,7 @@ int laf_add_whitelist(int wl_type, char *path, char *cmd) {
 	fseek(fp, 0, SEEK_SET);
 
 	buffer = malloc((f_size + 1) * sizeof(char));
-	fread(buffer, f_size, 1, fp);
+	ret = fread(buffer, f_size, 1, fp);
 
 	fclose(fp);
 
