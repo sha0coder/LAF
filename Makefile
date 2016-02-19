@@ -17,7 +17,7 @@ lafctl:
 	$(CC) $(EXTRA_CFLAGS) laffun.o lafctl.c -o lafctl
 
 lafd:
-	$(CC) $(EXTRA_CFLAGS) laffun.o lafd.c -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -L/lib/x86_64-linux-gnu -o lafd -ldbus-1
+	$(CC) $(EXTRA_CFLAGS) laffun.o lafd.c $(shell pkg-config --cflags dbus-1) -o lafd $(shell pkg-config --libs dbus-1)
 
 modules:
 	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules -Wunused-function -Werror=strict-prototypes
@@ -37,10 +37,10 @@ uninstall:
 	sudo rm /etc/laf.cfg
 	sudo rm /lib/systemd/system/laf.service
 	sudo rm /etc/dbus-1/system.d/lafd.conf
-	sudo systemctl disable laf.service
 	sudo rmmod laf
 	sudo rm /lib/modules/$(shell uname -r)/kernel/net/laf/laf.ko
 	sudo rmdir /lib/modules/$(shell uname -r)/kernel/net/laf
+	sudo systemctl disable laf.service
 	echo "** NOW REMOVE laf FROM YOUR /etc/modules.conf OR /etc/modules-load.d FILE **"
 
 install: all
@@ -49,10 +49,10 @@ install: all
 	sudo cp -f laf.cfg     /etc
 	sudo cp -f laf.service /lib/systemd/system/
 	sudo cp -f lafd.conf   /etc/dbus-1/system.d/
-	sudo systemctl enable laf.service
 	sudo mkdir -p /lib/modules/$(shell uname -r)/kernel/net/laf
 	sudo cp -f laf.ko /lib/modules/$(shell uname -r)/kernel/net/laf
 	sudo depmod -a
+	sudo systemctl enable laf.service
 	echo "** NOW ADD laf TO YOUR /etc/modules.conf OR /etc/modules-load.d FILE **"
 
 unload:

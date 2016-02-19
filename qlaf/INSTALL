@@ -1,5 +1,10 @@
-To build this project you need this dependencies:
-$ apt install qt5-default qdbus-qt5 libqt5dbus5 qt5-qmake
+To build this project you need this dependencies
+
+* Qt5:
+$ apt install qt5-default qdbus-qt5 libqt5dbus5 qt5-qmake policykit-1
+
+* Qt4:
+$ apt-get install qt4-dev-tools qdbus qt4-qmake policykit-1
 
 Build time!
 $ qmake
