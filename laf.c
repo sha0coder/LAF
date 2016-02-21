@@ -357,8 +357,7 @@ asmlinkage long new_socketcall(int call, unsigned long __user *args) {
 		case SYS_BIND:
 		case SYS_SOCKET:
 			
-			if (!access_ok(VERIFY_READ, args, sizeof(unsigned long *)) && 
-				!access_ok(VERIFY_READ, args[0], sizeof(int)))
+			if (!access_ok(VERIFY_READ, args, sizeof(unsigned long *)))
 					return BLOCKED;
 	
 			if (args[0] == IA32_AF_INET) {	
