@@ -356,13 +356,18 @@ asmlinkage long new_socketcall(int call, unsigned long __user *args) {
 	switch (call) {
 		case SYS_BIND:
 		case SYS_SOCKET:
-		if (args[0] == IA32_AF_INET) {	
-			if  (!isWhitelistedExact() && !isWhitelistedSimilar() && ENABLED) {
-				laf_send_alert(LAF_BLOCK_SC, call,args[0],current->comm,current->pid,current->tgid,current->real_parent->comm,current->real_parent->pid);
-				return BLOCKED;
-			} else if (DEBUG)
-				laf_send_alert(LAF_ALLOW_SC, call,args[0],current->comm,current->pid,current->tgid,current->real_parent->comm,current->real_parent->pid);
-		}
+			
+			if (!access_ok(VERIFY_READ, args, sizeof(unsigned long *)) && 
+				!access_ok(VERIFY_READ, args[0], sizeof(int)))
+					return BLOCKED;
+	
+			if (args[0] == IA32_AF_INET) {	
+				if  (!isWhitelistedExact() && !isWhitelistedSimilar() && ENABLED) {
+					laf_send_alert(LAF_BLOCK_SC, call,args[0],current->comm,current->pid,current->tgid,current->real_parent->comm,current->real_parent->pid);
+					return BLOCKED;
+				} else if (DEBUG)
+					laf_send_alert(LAF_ALLOW_SC, call,args[0],current->comm,current->pid,current->tgid,current->real_parent->comm,current->real_parent->pid);
+			}
 				
 		break;
 	}

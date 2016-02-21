@@ -65,7 +65,7 @@ reset: clean unload load
 
 clean:
 	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
-	rm laffun.o lafctl lafd
+	rm -f laffun.o lafctl lafd
 
 mrproper: clean
 	rm -f *.mod.* *.o *.ko .laf.* modules.order
