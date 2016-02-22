@@ -26,5 +26,3 @@
 #define LAF_ALLOW_S         1
 #define LAF_BLOCK_SC        2
 #define LAF_ALLOW_SC        3
-
-#define SYS_LCHOWN16		0xffffffff810d5810	/* sys_lchown16 */

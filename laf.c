@@ -33,6 +33,7 @@
 #include <net/sock.h>
 
 #include "laf.h"
+#include "ia32_addr.h"
 
 #ifdef __x86_64__
 # define __NR_socketcall	102
@@ -252,19 +253,7 @@ static unsigned long **acquire_sys_call_table(void)
 #ifdef __x86_64__
 static unsigned long **acquire_ia32_sys_call_table(void)
 {
-	unsigned long int offset = PAGE_OFFSET;
-	unsigned long **sct;
-
-	while (offset < ULLONG_MAX) {
-		sct = (unsigned long **)offset;
-
-		if (sct[__NR_ia32_lchown] == (unsigned long *) SYS_LCHOWN16) 
-			return sct;
-
-		offset += sizeof(void *);
-	}
-	
-	return NULL;
+	return (unsigned long **)SYSCALL_IA32_ADDR;
 }
 #endif
 

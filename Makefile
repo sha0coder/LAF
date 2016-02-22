@@ -20,6 +20,7 @@ lafd:
 	$(CC) $(EXTRA_CFLAGS) laffun.o lafd.c $(shell pkg-config --cflags dbus-1) -o lafd $(shell pkg-config --libs dbus-1)
 
 modules:
+	sudo bash scripts/premake.sh
 	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules -Wunused-function -Werror=strict-prototypes
 
 modules-install:
@@ -43,7 +44,7 @@ uninstall:
 	sudo systemctl disable laf.service
 	echo "** NOW REMOVE laf FROM YOUR /etc/modules.conf OR /etc/modules-load.d FILE **"
 
-install: all
+install:
 	sudo cp -f lafctl      /usr/bin
 	sudo cp -f lafd        /usr/bin
 	sudo cp -f laf.cfg     /etc
