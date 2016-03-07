@@ -1,6 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file>icons/laf_green.svg</file>
+        <file>icons/laf_amber.svg</file>
         <file>icons/laf_red.svg</file>
         <file>icons/laf_icon.svg</file>
     </qresource>

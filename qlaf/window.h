@@ -17,6 +17,7 @@
 #include <QDebug>
 #include <QFile>
 #include <QDate>
+#include <QTimer>
 #include <QProcess>
 #include <QToolBar>
 #include <QVBoxLayout>
@@ -32,6 +33,7 @@ public:
     ~Window();
     QSystemTrayIcon *trayIcon;
     QTableWidget    *table;
+    bool             trayMuted;
 
 signals:
 
@@ -44,9 +46,12 @@ private slots:
     void setStatus_on();
     void setStatus_off();
     void setStatus(int);
+    void setMute_on();
+    void setMute_off();
     void updateWhitelist();
     void showAbout();
     void updateIcon();
+    void setIcon(int);
     void addWhitelist(int, QString);
     void addItemWhitelist(int, int);
     int  getStatus();
@@ -57,6 +62,8 @@ private:
 
     QAction *disableAction;
     QAction *enableAction;
+    QAction *muteAction;
+    QAction *unmuteAction;
     QAction *aboutAction;
     QAction *updateAction;
     QAction *quitAction;

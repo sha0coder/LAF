@@ -3,6 +3,9 @@
 Window::Window(QWidget *parent) :
     QWidget(parent)
 {
+    // Tray unmuted by default
+    trayMuted = 0;
+
     createActions();
     createTrayIcon();
 
@@ -71,7 +74,12 @@ void Window::addEvent(QString event)
     text.append(")");
 
     trayIcon->setObjectName(pid + "/" + tid + "/" + cmd);
-    trayIcon->showMessage("Application networking blocked", text, QSystemTrayIcon::Warning, LAF_MSG_TIMEOUT * 1000);
+    if (!trayMuted)
+        trayIcon->showMessage("Application networking blocked", text, QSystemTrayIcon::Warning, LAF_MSG_TIMEOUT * 1000);
+
+    // Amber icon until timeout
+    setIcon(2);
+    QTimer::singleShot(LAF_MSG_TIMEOUT * 1000, this, SLOT(updateIcon()));
 
     table->insertRow(0);
     for (int rc = 0; rc < 8; rc++) {
@@ -99,6 +107,20 @@ void Window::setStatus_off() {
     setStatus(0);
 }
 
+void Window::setMute_on() {
+    trayIcon->showMessage("LAF", "Notifications muted",   QSystemTrayIcon::Information, LAF_MSG_TIMEOUT * 100);
+    this->trayMuted = 1;
+    muteAction->setEnabled(0);
+    unmuteAction->setEnabled(1);
+}
+
+void Window::setMute_off() {
+    trayIcon->showMessage("LAF", "Notifications unmuted", QSystemTrayIcon::Information, LAF_MSG_TIMEOUT * 100);
+    this->trayMuted = 0;
+    muteAction->setEnabled(1);
+    unmuteAction->setEnabled(0);
+}
+
 void Window::setStatus(int status) {
 
     QString program = "pkexec";
@@ -122,10 +144,28 @@ void Window::showAbout()
 
 void Window::updateIcon()
 {
-    if (getStatus())
-        trayIcon->setIcon(QIcon(":/icons/laf_green.svg"));
-    else
-        trayIcon->setIcon(QIcon(":/icons/laf_red.svg"));
+    setIcon(getStatus());
+}
+
+void Window::setIcon(int iconNum)
+{
+    switch (iconNum)
+    {
+        case 0:
+            trayIcon->setIcon(QIcon(":/icons/laf_red.svg"));
+            enableAction->setEnabled(1);
+            disableAction->setEnabled(0);
+            break;
+        case 2:
+            trayIcon->setIcon(QIcon(":/icons/laf_amber.svg"));
+            break;
+        case 1:
+        default:
+            trayIcon->setIcon(QIcon(":/icons/laf_green.svg"));
+            enableAction->setEnabled(0);
+            disableAction->setEnabled(1);
+            break;
+    }
 }
 
 int Window::getStatus()
@@ -159,11 +199,17 @@ void Window::updateWhitelist()
 
 void Window::createActions()
 {
+    enableAction  = new QAction(tr("&Enable LAF"), this);
+    connect(enableAction, SIGNAL(triggered()), this, SLOT(setStatus_off()));
+
     disableAction = new QAction(tr("&Disable LAF"), this);
     connect(disableAction, SIGNAL(triggered()), this, SLOT(setStatus_on()));
 
-    enableAction  = new QAction(tr("&Enable LAF"), this);
-    connect(enableAction, SIGNAL(triggered()), this, SLOT(setStatus_off()));
+    muteAction = new QAction(tr("&Mute LAF"), this);
+    connect(muteAction, SIGNAL(triggered()), this, SLOT(setMute_on()));
+
+    unmuteAction  = new QAction(tr("U&nmute LAF"), this);
+    connect(unmuteAction, SIGNAL(triggered()), this, SLOT(setMute_off()));
 
     updateAction  = new QAction(tr("&Update whitelist"), this);
     connect(updateAction, SIGNAL(triggered()), this, SLOT(updateWhitelist()));
@@ -179,10 +225,18 @@ void Window::createTrayIcon()
 {
     trayIconMenu = new QMenu(this);
 
-    trayIconMenu->addAction(disableAction);
     trayIconMenu->addAction(enableAction);
+    trayIconMenu->addAction(disableAction);
+    trayIconMenu->addSeparator();
+
+    trayIconMenu->addAction(muteAction);
+    trayIconMenu->addAction(unmuteAction);
+    muteAction->setEnabled(0);
+    trayIconMenu->addSeparator();
+
     trayIconMenu->addAction(updateAction);
     trayIconMenu->addSeparator();
+
     trayIconMenu->addAction(aboutAction);
     trayIconMenu->addAction(quitAction);
 
@@ -192,6 +246,9 @@ void Window::createTrayIcon()
 
 void Window::messageClicked()
 {
+    if (trayIcon->objectName().length() == 0)
+        return;
+
     int     pid = trayIcon->objectName().split('/')[0].toInt();
     int     tid = trayIcon->objectName().split('/')[1].toInt();
     QString cmd = trayIcon->objectName().split('/')[2];
@@ -255,7 +312,7 @@ void Window::iconActivated(QSystemTrayIcon::ActivationReason reason)
             updateIcon();
         break;
     default:
-        ;
+        break;
     }
 
 }
