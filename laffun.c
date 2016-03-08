@@ -36,10 +36,10 @@ int open_netlink(void)
 	addr.nl_family = AF_NETLINK;
 	addr.nl_pid = getpid();
 
-    if (bind(sock, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
-        printf("bind < 0.\n");
-        return -1;
-    }
+	if (bind(sock, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
+		printf("bind < 0.\n");
+		return -1;
+	}
 
 	if (setsockopt(sock, SOL_NETLINK, NETLINK_ADD_MEMBERSHIP, &group, sizeof(group)) < 0) {
 		fprintf(stderr, "error: can't open netlink.\n");
@@ -142,21 +142,21 @@ void read_event_buf(int sock, int wait, char *buf_in, size_t buf_in_len)
 
 int read_config (char *path, char *whitelist_exact, char *whitelist_similar) {
 	FILE   *fp;
-    char   *line = NULL;
-    size_t  len = 0;
-    ssize_t read;
+	char   *line = NULL;
+	size_t  len = 0;
+	ssize_t read;
 	char    flag_exact   = 0;
 	char    flag_similar = 0;
 	int     wl_size_e    = 0;
 	int     wl_size_s    = 0;
 
-    fp = fopen(path, "r");
-    if (fp == NULL) {
+	fp = fopen(path, "r");
+	if (fp == NULL) {
 		fprintf(stderr, "error: can't read the file %s\n", path);
 		return -1;
 	}
 
-    while ((read = getline(&line, &len, fp)) != -1) {
+	while ((read = getline(&line, &len, fp)) != -1) {
 		if (line[0] == ' ' || line[0] == ';' || line[0] == '\n')
 			continue;
 
@@ -192,9 +192,9 @@ int read_config (char *path, char *whitelist_exact, char *whitelist_similar) {
 
 		if (flag_similar) {
 			wl_size_s += read;
-        	strcat(whitelist_similar,line);
+			strcat(whitelist_similar,line);
 		}
-    }
+	}
 
 	fclose(fp);
 
@@ -216,11 +216,11 @@ int laf_set_sysctl(int status) {
 
 
 int laf_add_whitelist(int wl_type, char *path, char *cmd) {
-	FILE   *fp;
-    char   *line = NULL;
+	FILE   *fp_r, *fp_w;
+	char   *line = NULL;
 	char   *buffer;
-    size_t  len = 0;
-    ssize_t read;
+	size_t  len = 0;
+	ssize_t read;
 	char    flag_search = 0;
 	int		f_size = 0;
 	int		f_seek = 0;
@@ -229,47 +229,47 @@ int laf_add_whitelist(int wl_type, char *path, char *cmd) {
 	if (wl_type > 1)
 		return -1;
 
-    fp = fopen(path, "r+");
-    if (fp == NULL) {
+	fp_r = fopen(path, "r+");
+	if (fp_r == NULL) {
 		fprintf(stderr, "error: can't read the file %s\n", path);
 		return -1;
 	}
 
 	cmd_len = strlen(cmd);
 
-    while ((read = getline(&line, &len, fp)) != -1) {
+	while ((read = getline(&line, &len, fp_r)) != -1) {
 
 		if (cmd_len == (read -1) && (strncmp(line,cmd,read -1) == 0)) {
-			fclose(fp);
+			fclose(fp_r);
 			return 1;
 		}
 
 		if ((strcmp(line,"[whitelist_exact]\n")   == 0 && wl_type == 0) || 
 			(strcmp(line,"[whitelist_similar]\n") == 0 && wl_type == 1)) {
-			f_seek = ftell(fp);
+			f_seek = ftell(fp_r);
 		}
 
 	}
 
-	fseek(fp, 0, SEEK_END);
-	f_size = ftell(fp);
-	fseek(fp, 0, SEEK_SET);
+	fseek(fp_r, 0, SEEK_END);
+	f_size = ftell(fp_r);
+	fseek(fp_r, 0, SEEK_SET);
 
 	buffer = malloc((f_size + 1) * sizeof(char));
-	ret = fread(buffer, f_size, 1, fp);
+	ret = fread(buffer, f_size, 1, fp_r);
 
-	fclose(fp);
+	fclose(fp_r);
 
-    fp = fopen(path, "w+");
+	fp_w = fopen(path, "w+");
 	for (i=0; i < f_seek; i++)
-		fputc(buffer[i],fp);
+		fputc(buffer[i],fp_w);
 
-	fprintf(fp,"%s\n",cmd);
+	fprintf(fp_w,"%s\n",cmd);
 
-	for (i=f_seek; i <= f_size; i++)
-		fputc(buffer[i],fp);
+	for (i=f_seek; i < f_size; i++)
+		fputc(buffer[i],fp_w);
 
-	fclose(fp);
+	fclose(fp_w);
 
 	free(buffer);
 

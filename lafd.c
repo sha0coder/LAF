@@ -62,27 +62,27 @@ void send_signal(DBusConnection *conn, char* sigvalue)
 
 	pid_t pid;
 
-    pid = fork();
+	pid = fork();
 
-    if (pid < 0)
-        exit(EXIT_FAILURE);
+	if (pid < 0)
+		exit(EXIT_FAILURE);
 
-    if (pid > 0)
-        exit(EXIT_SUCCESS);
+	if (pid > 0)
+		exit(EXIT_SUCCESS);
 
-    if (setsid() < 0)
-        exit(EXIT_FAILURE);
+	if (setsid() < 0)
+		exit(EXIT_FAILURE);
 
-    signal(SIGCHLD, SIG_IGN);
-    signal(SIGHUP, SIG_IGN);
+	signal(SIGCHLD, SIG_IGN);
+	signal(SIGHUP, SIG_IGN);
 
-    pid = fork();
+	pid = fork();
 
-    if (pid < 0)
-        exit(EXIT_FAILURE);
+	if (pid < 0)
+		exit(EXIT_FAILURE);
 
-    if (pid > 0)
-        exit(EXIT_SUCCESS);
+	if (pid > 0)
+		exit(EXIT_SUCCESS);
 
 	// initialise the error value
 	dbus_error_init(&err);

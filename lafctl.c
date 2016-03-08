@@ -23,8 +23,8 @@ char config_path[MAX_PATH] = "/etc/laf.cfg";
 
 int main(int argc, char *argv[])
 {
-	char *whitelist_exact   = NULL;
-	char *whitelist_similar = NULL;
+	char *whitelist_exact;
+	char *whitelist_similar;
 	char *cmd, *type;
 	int  nls, c, i;
 	char flag_u = 0, flag_g = 0, flag_a = 0;
@@ -84,12 +84,20 @@ int main(int argc, char *argv[])
 		whitelist_exact   = malloc(MAX_WL_SIZE);
 		whitelist_similar = malloc(MAX_WL_SIZE);
 
+		bzero(whitelist_exact,   MAX_WL_SIZE);
+		bzero(whitelist_similar, MAX_WL_SIZE);
+
 		whitelist_exact[0]   = '3';
 		whitelist_similar[0] = '4';
 		
 		if (read_config(config_path, whitelist_exact, whitelist_similar) < 0) {
 			close(nls);
 			return EXIT_FAILURE;
+		}
+
+		if (DEBUG) {
+			printf("E: %s\n", whitelist_exact);
+			printf("S: %s\n", whitelist_similar);
 		}
 
 		/* send */

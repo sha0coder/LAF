@@ -37,16 +37,25 @@ The second is for strings to be compared with strstr(), if you want to allow all
 
 == Installing and running ==
 
-$ make install
+$ make
+# make install
 
 This will compile and copy the module on /lib/modules.
 You can load it with:
 
+# modprobe laf
+
 Add the module to /etc/modules or similar...
 
-# modprobe laf
 # vi /etc/laf.cfg
 # lafctl -u -f /etc/laf.cfg
+
+To make the qLAF GUI:
+
+$ cd qlaf
+$ qmake
+$ make
+# cp qlaf /usr/bin
 
 If you want to see what is blocking the LAF driver:
 
@@ -59,9 +68,16 @@ tail -f /var/log/kern.log
 [16569.004590] LAF: fam 10 proto 00 blocked: VBoxXPCOMIPCD (26102:26102) parent: systemd (1)
 [16569.048654] LAF: fam 10 proto 00 blocked: VBoxSVC (26107:26107) parent: systemd (1)
 
+And if lafd is started you also can monitor the dbus:
+
+$ dbus-monitor --system "interface='laf.signal.source'"
+
+signal sender=:1.529 -> dest=(null destination) serial=19 path=/laf/signal/alert; interface=laf.signal.source; member=event
+   string "/2/0/kk/27293/27293/bash/27255"
+
 == Philosophy ==
 
-This is not a comprehensive solution against advanced attackers. There are many ways to bypass this kind of protection. However, it makes for an additional barrier for the attacker to overcome - think of it as defense in depth. The typical use case would be to isolate vainilla spyware, and to block most common shellcodes.
+This is not a comprehensive solution against advanced attackers. There are many ways to bypass this kind of protection. However, it makes for an additional barrier for the attacker to overcome - think of it as defense in depth. The typical use case would be to isolate vainilla spyware, privacy issues and to block most common shellcodes.
 
 In the past we protected our open ports to the Internet, nowadays the problem is in the client side, client apps sending data to the Internet.
 

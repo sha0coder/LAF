@@ -108,15 +108,17 @@ void Window::setStatus_off() {
 }
 
 void Window::setMute_on() {
-    trayIcon->showMessage("LAF", "Notifications muted",   QSystemTrayIcon::Information, LAF_MSG_TIMEOUT * 100);
-    this->trayMuted = 1;
+//  trayIcon->showMessage("LAF", "Notifications muted",   QSystemTrayIcon::Information, LAF_MSG_TIMEOUT * 100);
+    trayMuted = 1;
+    updateIcon();
     muteAction->setEnabled(0);
     unmuteAction->setEnabled(1);
 }
 
 void Window::setMute_off() {
-    trayIcon->showMessage("LAF", "Notifications unmuted", QSystemTrayIcon::Information, LAF_MSG_TIMEOUT * 100);
-    this->trayMuted = 0;
+//  trayIcon->showMessage("LAF", "Notifications unmuted", QSystemTrayIcon::Information, LAF_MSG_TIMEOUT * 100);
+    trayMuted = 0;
+    updateIcon();
     muteAction->setEnabled(1);
     unmuteAction->setEnabled(0);
 }
@@ -152,16 +154,28 @@ void Window::setIcon(int iconNum)
     switch (iconNum)
     {
         case 0:
-            trayIcon->setIcon(QIcon(":/icons/laf_red.svg"));
+            if (trayMuted)
+                trayIcon->setIcon(QIcon(":/icons/laf_mute_red.svg"));
+            else
+                trayIcon->setIcon(QIcon(":/icons/laf_red.svg"));
+
             enableAction->setEnabled(1);
             disableAction->setEnabled(0);
+
             break;
         case 2:
-            trayIcon->setIcon(QIcon(":/icons/laf_amber.svg"));
+            if (trayMuted)
+                trayIcon->setIcon(QIcon(":/icons/laf_mute_amber.svg"));
+            else
+                trayIcon->setIcon(QIcon(":/icons/laf_amber.svg"));
             break;
         case 1:
         default:
-            trayIcon->setIcon(QIcon(":/icons/laf_green.svg"));
+            if (trayMuted)
+                trayIcon->setIcon(QIcon(":/icons/laf_mute_green.svg"));
+            else
+                trayIcon->setIcon(QIcon(":/icons/laf_green.svg"));
+
             enableAction->setEnabled(0);
             disableAction->setEnabled(1);
             break;
@@ -231,7 +245,7 @@ void Window::createTrayIcon()
 
     trayIconMenu->addAction(muteAction);
     trayIconMenu->addAction(unmuteAction);
-    muteAction->setEnabled(0);
+    unmuteAction->setEnabled(0);
     trayIconMenu->addSeparator();
 
     trayIconMenu->addAction(updateAction);
@@ -300,8 +314,8 @@ void Window::iconActivated(QSystemTrayIcon::ActivationReason reason)
 {
 
     switch (reason) {
-//    case QSystemTrayIcon::Trigger:
-    case QSystemTrayIcon::DoubleClick:
+    case QSystemTrayIcon::Trigger:
+//    case QSystemTrayIcon::DoubleClick:
         if (this->isVisible())
             this->hide();
         else
@@ -309,7 +323,10 @@ void Window::iconActivated(QSystemTrayIcon::ActivationReason reason)
 
         break;
     case QSystemTrayIcon::MiddleClick:
-            updateIcon();
+            if (trayMuted)
+                setMute_off();
+            else
+                setMute_on();
         break;
     default:
         break;
