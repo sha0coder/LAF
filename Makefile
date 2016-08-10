@@ -22,6 +22,7 @@ lafd:
 modules:
 	sudo bash scripts/premake.sh
 	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules -Wunused-function -Werror=strict-prototypes
+	true > ia32_addr.h
 
 modules-install:
 	sudo cp -f laf.ko /lib/modules/$(shell uname -r)/kernel/net/laf

@@ -155,9 +155,9 @@ void Window::setIcon(int iconNum)
     {
         case 0:
             if (trayMuted)
-                trayIcon->setIcon(QIcon(":/icons/laf_mute_red.svg"));
+                trayIcon->setIcon(QPixmap(":/icons/laf_mute_red.svg"));
             else
-                trayIcon->setIcon(QIcon(":/icons/laf_red.svg"));
+                trayIcon->setIcon(QPixmap(":/icons/laf_red.svg"));
 
             enableAction->setEnabled(1);
             disableAction->setEnabled(0);
@@ -165,16 +165,16 @@ void Window::setIcon(int iconNum)
             break;
         case 2:
             if (trayMuted)
-                trayIcon->setIcon(QIcon(":/icons/laf_mute_amber.svg"));
+                trayIcon->setIcon(QPixmap(":/icons/laf_mute_amber.svg"));
             else
-                trayIcon->setIcon(QIcon(":/icons/laf_amber.svg"));
+                trayIcon->setIcon(QPixmap(":/icons/laf_amber.svg"));
             break;
         case 1:
         default:
             if (trayMuted)
-                trayIcon->setIcon(QIcon(":/icons/laf_mute_green.svg"));
+                trayIcon->setIcon(QPixmap(":/icons/laf_mute_green.svg"));
             else
-                trayIcon->setIcon(QIcon(":/icons/laf_green.svg"));
+                trayIcon->setIcon(QPixmap(":/icons/laf_green.svg"));
 
             enableAction->setEnabled(0);
             disableAction->setEnabled(1);
