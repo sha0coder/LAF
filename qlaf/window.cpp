@@ -96,7 +96,7 @@ void Window::addEvent(QString event)
     table->item(0,6)->setText(pcmd);
     table->item(0,7)->setText(ppid);
 
-    connect(table, SIGNAL(cellDoubleClicked(int, int)), this, SLOT(addItemWhitelist(int, int)));
+    connect(table, SIGNAL(cellDoubleClicked(int, int)), this, SLOT(addItemWhitelist(int, int)),Qt::UniqueConnection);
 }
 
 void Window::setStatus_on() {
